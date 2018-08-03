@@ -1,81 +1,45 @@
-### Jekyll ###
+# Ignore docs files
+_gh_pages
 _site
-.sass-cache
-.jekyll-metadata
-Gemfile.lock
+.ruby-version
 
-
-### Gulp ###
-package.json
-/node_modules/
-
-
-### Atom ###
-.ftpconfig
-.sftpconfig
-
-
-### Compiled Source ###
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
-
-
-### Compressed Packages ###
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
-
-
-### Logs and Databases ###
+# Numerous always-ignore extensions
+*.diff
+*.err
+*.orig
 *.log
-*.sql
-*.sqlite
-
-
-### Linux ###
+*.rej
+*.swo
+*.swp
+*.zip
+*.vi
 *~
-.fuse_hidden*
-.Trash-*
-.nfs*
 
-
-### MacOS ###
-*.DS_Store
-.AppleDouble
-.LSOverride
-Icon
+# OS or Editor folders
+.DS_Store
 ._*
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
-
-
-### Windows ###
 Thumbs.db
-ehthumbs.db
-ehthumbs_vista.db
-Desktop.ini
-$RECYCLE.BIN/
-*.cab
-*.msi
-*.msm
-*.msp
-*.lnk
+.cache
+.project
+.settings
+.tmproj
+*.esproj
+nbproject
+*.sublime-project
+*.sublime-workspace
+.idea
+
+# Komodo
+*.komodoproject
+.komodotools
+
+# grunt-html-validation
+validation-status.json
+validation-report.json
+
+# Folders to ignore
+node_modules
+bower_components
+
+# sass
+.sass-cache
