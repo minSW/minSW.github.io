@@ -9,6 +9,7 @@
 @import "_partial/footer";
 @import "_partial/mq";
 @import "_partial/copyright";
+@import "_partial/other";
 
 @font-face {
     font-family: 'sourcesanspro';
@@ -16,4 +17,8 @@
          url('../font/sourcesanspro.woff') format('woff');
     font-weight: normal;
     font-style: normal;
+}
+
+.datatable {
+  padding-top: 10px;
 }
