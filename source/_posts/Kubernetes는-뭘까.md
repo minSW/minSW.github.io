@@ -5,6 +5,7 @@ categories: kubernetes
 tags: 
   - kubernetes
   - k8s
+  - container
   - CNCF
 ---
 

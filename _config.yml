@@ -73,7 +73,7 @@ pagination_dir: page
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: apollo
+theme: apollo2
 
 archive_generator:
     per_page: 0
@@ -86,3 +86,13 @@ archive_generator:
 deploy:
   type: git
   repo: https://github.com/minSW/minSW.github.io
+
+sitemap:
+  path: sitemap.xml
+  template: ./sitemap_template.xml
+
+feed:
+  type: atom
+  path: feed.xml
+  limit: 0
+  hub:
