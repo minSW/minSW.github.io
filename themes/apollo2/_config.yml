@@ -1,0 +1,22 @@
+menu:
+    Blog: /
+    Archive: /archives/
+    Tag: /tags/
+    GitHub: https://github.com/minSW
+
+favicon: /cover.png
+logo: /cover.png
+
+# Comment
+# e.g disqus: seansun
+disqus: minsw-github-io 
+cloudTie:
+
+language: en
+
+# Analytics
+# google-analytics: UA-143001954-1
+ga: UA-143001954-1
+
+# Copyright Information
+startyear: 2018
