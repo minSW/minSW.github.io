@@ -105,6 +105,7 @@ archive_generator:
 deploy:
   type: git
   repo: https://github.com/minSW/minSW.github.io
+  branch: master
 
 sitemap:
   path: sitemap.xml
