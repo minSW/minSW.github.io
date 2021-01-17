@@ -87,6 +87,17 @@ themes/layout 하위의 모든 `*.jade` 파일을 `*.pug` 로 변경 + [hexo-ren
 $ npm install hexo-renderer-pug --save
 ```
 
+#### 문제 3. 배포가 안된다 & 이상하게 올라간다
+
+[hexo-deployer-git](https://www.npmjs.com/package/hexo-deployer-git) 이 잘 설치되어있는지 확인.
+
+잘 설치되어있고 `hexo deploy`가 되긴하는데
+정적 파일말고 소스코드가 올라간다던지 뭔가 엉켰다면 **.deploy_git** 삭제 후 재시도 추천
+
+```bash
+$ rm -rf .deploy_git # reset
+```
+
 <br/>
 
 ## 해치웠나..
@@ -109,7 +120,10 @@ $ hexo new "NEW_POST_NAME" # new post 작성
 $ hexo generate # 정적 파일 (public) 생성
 $ hexo clean # 캐시 및 정적 파일 삭제
 
-$ hexo server # 로컬 서버 (localhost:4000) 구동
+$ hexo server # 로컬 서버 (localhost:4000) 구동 _ 테스트
 $ hexo deploy # 웹 사이트 deploy
+
+# hexo d -g 도 가능하지만 내 블로그는 가끔 이상하게 렌더링되기도하니 아래 커맨드로 배포할 것
+$ hexo clean && hexo generate && hexo deploy
 ```
 
