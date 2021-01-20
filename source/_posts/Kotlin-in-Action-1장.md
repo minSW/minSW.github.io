@@ -1,5 +1,5 @@
 ---
-title: '''Kotlin in Action'' 1장 - 코틀린 (Kotlin) 이란?'
+title: '&#039;Kotlin in Action&#039; 1장 - Kotlin (코틀린) 은 뭘까'
 date: 2019-07-02 23:07:55
 categories: kotlin
 tags:
@@ -7,6 +7,7 @@ tags:
 	- study
 	- book
 	- summarization
+	- mwolkka
 ---
 
 <br/>
