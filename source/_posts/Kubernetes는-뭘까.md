@@ -7,6 +7,7 @@ tags:
   - k8s
   - container
   - CNCF
+  - mwolkka
 ---
 
 ## Kubernetes를 시작하기 앞서

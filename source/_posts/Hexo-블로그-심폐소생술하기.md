@@ -6,6 +6,7 @@ tags:
 	- blog
 	- hexo
 	- CPR
+	- guide
 ---
 
 2019년에서 멈춰버린 블로그 한번 살려 보려다가

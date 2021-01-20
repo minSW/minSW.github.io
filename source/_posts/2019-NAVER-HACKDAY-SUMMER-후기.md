@@ -91,12 +91,11 @@ tags:
  	- 어떤 기술 스택을 사용할 것인가?
  	- 어떤식으로 Clustering할 것인가?
  	- 어떠한 플로우로 데이터를 처리하고, 어떻게 분석할 것인가? (설계)
- 	
  	```
-Container Management : Kubernetes
-Message Queue : Kafka
-Database & Analytics Engine : Hbase + Spark
-```
+	Container Management : Kubernetes
+	Message Queue : Kafka
+	Database & Analytics Engine : Hbase + Spark
+	```
  	
  3. 컨테이너 기반 (Kubernetes)
 	- 어느 범위까지 컨테이너화할 것인가?
@@ -160,11 +159,11 @@ Hackday 당일, 춘천으로 출발 전에 미리 모여 멘토님과 간단하�
 
 #### '혹시'하면 '역시'다.
 
-<center>![c4796fa2653be1d6726b90fe3189184d](https://user-images.githubusercontent.com/26691216/60401215-0ebc7e80-9bb9-11e9-90bf-d301476adcce.gif)</center>
+<center><img src="https://user-images.githubusercontent.com/26691216/60401215-0ebc7e80-9bb9-11e9-90bf-d301476adcce.gif" width="210"></center>
 <center><i>서버들은 이유 없이 돌아가며 터지고, <br/>
 Kubernetes는 갑자기 막혔고, <br/>
-Hbase Cluster도 급 터져 팀원님이 해결하시는 와중에 <br/>
-우려 했던 나의 Spark (정확히는 Scalar) 멘붕까지 <strong>터!져! Ba!by!</strong><br/>
+Hbase Cluster도 갑자기 터져 팀원님이 해결하고 계시는 와중에 <br/>
+우려 했던 Spark (Scalar) 멘붕까지 <strong>터/져/Ba/by</strong> 상태 <br/>
 </i></center> 
 
 새로운 도메인 지식 습득과 설계에 급급했던 나머지 나는 초반 인프라 구축 참여가 적었고 거기에 대한 이해도가 다소 부족했다. 그 중 Kafka는 비교적 많이 공부를 해갔지만 DB 쪽에는 신경을 많이 쓰지 못했더니,
