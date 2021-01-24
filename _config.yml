@@ -103,6 +103,8 @@ deploy:
   type: git
   repo: https://github.com/minSW/minSW.github.io
   branch: master
+  name: minSW
+  email: minsw08@gmail.com
 
 sitemap:
   path: sitemap.xml
