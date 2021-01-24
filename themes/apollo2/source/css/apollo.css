@@ -815,3 +815,28 @@ footer {
   padding-top: 10px; }
 
 /*# sourceMappingURL=apollo.css.map */
+
+
+/* custom css */
+.point-color,
+.point-color-can-hover {
+  color: #42b983;
+}
+
+.point-color-can-hover:hover {
+  color: #42b983;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.point-color-reverse,
+.point-color-reverse-can-hover {
+  color: #e96900;
+}
+
+.point-color-reverse-can-hover:hover {
+  color: #e96900;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
