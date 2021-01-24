@@ -7,7 +7,6 @@ tags:
 	- apache
 	- book
 	- study
-	- mwolkka
 ---
 
 
@@ -214,6 +213,7 @@ res3: Array[org.apache.spark.sql.Row] = Array([United States,Singapore,1], [Mold
   - -> 계보를 통해 스파크가 입력데이터에 수행한 연산을 전체 파티션에서 어떻게 재연산하는지 알 수 있음
   - *함수형 프로그래밍의 핵심* (Pure Function, 같은 입력 -> 같은 출력)
 - 사용자는 물리적 데이터를 직접 다루지 않고, 물리적 실행 특성을 제어
+  - 예시 => 파티션 수 변경 `spark.conf.set("spark.sql.shuffle.partitions", "5")`
   - 스파크 UI (4040 포트) 에서 스파크 잡 물리적, 논리적 실행 특성 확인 가능 
 <img width="500" alt="sparkui" src="https://user-images.githubusercontent.com/26691216/105624926-cfbfdf00-5e68-11eb-9407-e58a5f4688a9.png">
 
