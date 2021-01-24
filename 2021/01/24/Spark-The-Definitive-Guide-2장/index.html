@@ -1,0 +1,301 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> &#039;Spark The Definitive Guide&#039; 2장 - 스파크 찍어먹기 · Look out</title><meta name="description" content="&amp;#039;Spark The Definitive Guide&amp;#039; 2장 - 스파크 찍어먹기 - Lukka Min"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/cover.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link rel="search" type="application/opensearchdescription+xml" href="https://minsw.github.io/atom.xml" title="Look out"><script src="//code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script><meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Look out" type="application/atom+xml">
+</head><body><div class="wrap"><header><a class="logo-link" href="/"><img src="/cover.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a class="nav-list-link" href="/" target="_self">BLOG</a></li><li class="nav-list-item"><a class="nav-list-link" href="/archives/" target="_self">ARCHIVE</a></li><li class="nav-list-item"><a class="nav-list-link" href="/tags/" target="_self">TAG</a></li><li class="nav-list-item"><a class="nav-list-link" href="https://github.com/minSW" target="_blank">GITHUB</a></li></ul></header><main class="container"></main><div class="post"><article class="post-block"><h1 class="post-title">&#039;Spark The Definitive Guide&#039; 2장 - 스파크 찍어먹기</h1><div class="post-info">2021년 1월 24일<span class="categories"><i class="fa fa-bookmark" aria-hidden="true"></i></span><a class="post-category" href="/categories/spark/">#spark</a></div><div class="post-content"><img src="https://user-images.githubusercontent.com/26691216/105627228-e66e3200-5e78-11eb-9ea6-2e3662267b7a.jpg" width=200 />
+<center> 도커 이미지 사용시 Zeppelin에 예제 코드가 있다 <br/>
+나처럼 시력 검사&타자 연습 하느라 진빼지말고 Chapter2는 그냥 예제 코드를 쓰도록 하자... </center>
+
+
+<center><h2>_ _ _</h2></center>
+
+<br/>
+
+<hr>
+<h1 id="CHAPTER-2-스파크-간단히-살펴보기"><a href="#CHAPTER-2-스파크-간단히-살펴보기" class="headerlink" title="CHAPTER 2 스파크 간단히 살펴보기"></a>CHAPTER 2 스파크 간단히 살펴보기</h1><p>DataFrame, SQL 을 사용해 클러스터, 스파크 애플리케이션, 구조적 API 를 살펴보고<br>스파크의 핵심용어와 개념, 사용법을 익힌다.</p>
+<h3 id="2-1-스파크의-기본-아키텍처"><a href="#2-1-스파크의-기본-아키텍처" class="headerlink" title="2.1 스파크의 기본 아키텍처"></a>2.1 스파크의 기본 아키텍처</h3><blockquote>
+<p>스파크 애플리케이션을 이해하기 위한 핵심사항</p>
+<ul>
+<li>스파크는 사용가능한 자원을 파악하기 위해 <strong>클러스터 매니저</strong> 사용</li>
+<li><strong>드라이버</strong> 프로세스는 주어직 작업을 완료하기위해, 드라이버 프로그램의 명령을 <strong>익스큐터</strong>에서 실행할 책임이 있음</li>
+</ul>
+</blockquote>
+<ul>
+<li>스파크는 클러스터의 데이터 처리 작업을 관리 / 조율<ul>
+<li>컴퓨터 클러스터는 여러 컴퓨터의 자원을 모아 하나의 컴퓨터 처럼 사용</li>
+<li>클러스터에서 작업을 조율할 수 있는 프레임워크 =&gt; <strong>스파크</strong></li>
+</ul>
+</li>
+<li>스파크가 연산에 사용할 클러스터를 관리하는 <strong>클러스터 매니저</strong><ul>
+<li>스파크 standalone 클러스터 매니저, 하둡 YARN, Mesos</li>
+<li>역할<ul>
+<li>사용자 : 스파크 애플리케이션 제출 (submit)</li>
+<li>-&gt; 클러스터 매니저 : 애플리케이션 실행에 필요한 자원 할당 </li>
+<li>-&gt; 할당받은 자원으로 작업 처리</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>스파크 애플리케이션 = <code>driver</code> 프로세스 + 다수의 <code>executor</code> 프로세스<ul>
+<li><code>driver</code> 프로세스<ul>
+<li>클러스터 노드 중 하나에서 실행. main() 함수 실행</li>
+<li>심장과 같은 존재로, 애플리케이션 생명 주기 동안 관련 정보 모두 유지</li>
+</ul>
+</li>
+<li><code>executor</code> 프로세스<ul>
+<li>driver 가 할당한 작업 수행 &amp; 진행 상황을 driver에게 보고</li>
+<li>대부분 스파크 코드를 실행하는 역할로, 스파크 언어 API를 통해 다양한 언어로 실행 가능</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-2-스파크의-다양한-언어-API"><a href="#2-2-스파크의-다양한-언어-API" class="headerlink" title="2.2 스파크의 다양한 언어 API"></a>2.2 스파크의 다양한 언어 API</h3><ul>
+<li>스파크는 모든 언어에 맞는 몇몇 ‘핵심 개념’ 제공<ul>
+<li>핵심개념 -&gt; (클러스터 머신에서 실행되는) 스파크 코드 로 변환</li>
+<li>구조적 API만으로 작성된 코드는 언어에 무관하게 유사 성능</li>
+</ul>
+</li>
+<li>언어별 요약 정보<ul>
+<li>Scala : 스파크가 스칼라 기반. <strong>스파크의 기본 언어</strong></li>
+<li>Java : <del>자바 지원안해주면 난리칠거니까</del> 지원은 함</li>
+<li>Python : 스칼라가 지원하는 거의 모든 구조 지원</li>
+<li>SQL : ANSI SQL:2003 표준 중 일부 지원</li>
+<li>R : 스파크 코어의 sparkR, R 커뮤니티 기반의 sparklyr</li>
+</ul>
+</li>
+<li>SparkSession 객체<ul>
+<li>사용자가 스파크 코드를 실행하기위해 진입점으로 사용 가능</li>
+<li>Python, R 사용 시에도 사용자 대신 익스큐터의 JVM에서 실행할 수 있는 코드로 변환</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-3-스파크-API"><a href="#2-3-스파크-API" class="headerlink" title="2.3 스파크 API"></a>2.3 스파크 API</h3><ul>
+<li>다양한 언어로 사용할 수 있는 이유?<ul>
+<li>스파크가 기본적으로 제공하는 2가지 API 때문<ul>
+<li>저수준의 비구조적(unstructured) API</li>
+<li>고수준의 구조적(structured) API</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-4-스파크-시작하기"><a href="#2-4-스파크-시작하기" class="headerlink" title="2.4 스파크 시작하기"></a>2.4 스파크 시작하기</h3><ul>
+<li>Q. 스파크 애플리케이션을 개발하려면<ul>
+<li>A. 사용자 명령과 데이터를 스파크 애플리케이션에 전송하는 방법을 알아야</li>
+</ul>
+</li>
+<li>SparkSession 생성 실습. 자 드가자~</li>
+</ul>
+<h3 id="2-5-SparkSession"><a href="#2-5-SparkSession" class="headerlink" title="2.5 SparkSession"></a>2.5 SparkSession</h3><ul>
+<li><strong>SparkSession</strong> : 스파크 애플리케이션을 제어하는 드라이버 프로세스<ul>
+<li>사용자가 정의한 처리명령 -&gt; 클러스터에 실행</li>
+<li>스파크 애플리케이션에 1:1 대응</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> scala console</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> ./spark-2.4.7-bin-hadoop2.7/bin/spark-shell</span></span><br><span class="line"></span><br><span class="line"><span class="meta">scala&gt;</span><span class="bash"> spark</span></span><br><span class="line">res0: org.apache.spark.sql.SparkSession = org.apache.spark.sql.SparkSession@5b58f639</span><br><span class="line"><span class="meta">scala&gt;</span><span class="bash"> val myRange = spark.range(1000).toDF(<span class="string">&quot;number&quot;</span>)</span></span><br><span class="line">myRange: org.apache.spark.sql.DataFrame = [number: bigint]</span><br></pre></td></tr></table></figure>
+<h3 id="2-6-DataFrame"><a href="#2-6-DataFrame" class="headerlink" title="2.6 DataFrame"></a>2.6 DataFrame</h3><ul>
+<li><strong>DataFrame</strong> : 가장 대표적인 <strong>구조적 API</strong><ul>
+<li>테이블 데이터를 row, column 으로 단순하게 표현<ul>
+<li>scheme : column 과 column type 을 정의한 목록</li>
+</ul>
+</li>
+<li>DataFrame 은 수천 대의 컴퓨터에 분산 가능</li>
+<li>vs 스프레드 시트<ul>
+<li>비슷하다고 볼 수 있지만 스프레드 시트는 단일 컴퓨터 저장</li>
+</ul>
+</li>
+<li>vs Python (Pandas)의 DataFrame, R의 DataFrame<ul>
+<li>마찬가지로 대부분 단일 컴퓨터에 존재</li>
+<li>=&gt; 스파크 DataFrame으로 쉽게 변환 가능</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>스파크의 핵심 추상화 개념 (분산 데이터 모음)<ul>
+<li>Dataset, DataFrame, SQL 테이블, RDD</li>
+</ul>
+</li>
+<li>DataFrame의 파티션<ul>
+<li>익스큐터가 병렬로 작업을 수행할 수 있도록 데이터를 분할하는 청크 단위</li>
+<li>실행 중 데이터가 클러스터에서 물리적으로 분산되는 방식을 나타냄<ul>
+<li>파티션 1 익스큐터 1000 =&gt; 병렬성 1</li>
+<li>파티션 1000 익스큐터 1 =&gt; 병렬성 1</li>
+</ul>
+</li>
+<li>물리적 파티션에 데이터 변환용 함수 지정 시 스파크가 실제 처리 방법 결정 (파티션 수동 처리 필요 X)</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-7-트랜스포메이션"><a href="#2-7-트랜스포메이션" class="headerlink" title="2.7 트랜스포메이션"></a>2.7 트랜스포메이션</h3><ul>
+<li>스파크의 핵심 데이터 구조 =&gt; <strong>불변성 (immutable)</strong><ul>
+<li>DataFrame을 변경하려면?</li>
+<li>원하는 변경 방법을 스파크에게 알려줘야함 =&gt; <strong>트랜스포메이션</strong></li>
+</ul>
+</li>
+<li>트랜스포메이션 : 스파크에서 비즈니스 로직을 표현하는 핵심 개념<ul>
+<li>유형<ul>
+<li>좁은 의존성 (narrow dependency)<ul>
+<li>입력 파티션 : 출력 파티션 = 1 : 1</li>
+</ul>
+</li>
+<li>넓은 의존성 (wide dependency)<ul>
+<li>입력 파티션 : 출력 파티션 = 1 : N</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>지연 연산 (lazy evaluation) : 연산 그래프를 처리하기 직전까지 기다리는 동작 방식<ul>
+<li>스파크는 연산 명령 즉시 데이터를 수정 X. 원시 데이터에 적용할 트랜스포메이션의 <strong>실행 계획</strong>을 생성</li>
+<li>마지막까지 대기하다 DataFrame 트랜스포메이션을 간결한 물리적 실행 계획으로 컴파일 =&gt; 전체 데이터 흐름 최적화</li>
+<li>ex. DataFrame 의 predicate pushdown</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-8-액션"><a href="#2-8-액션" class="headerlink" title="2.8 액션"></a>2.8 액션</h3><ul>
+<li>트랜스포메이션은 논리적 실행 계획<ul>
+<li>트랜스포메이션을 선언해도 액션을 호출하지 않으면 수행 X</li>
+</ul>
+</li>
+<li>액션 (action) : 실제 연산을 수행<ul>
+<li>유형<ul>
+<li>콘솔에서 데이터를 보는 액션</li>
+<li>각 언어로 된 네이티브 객체에 데이터를 모으는 액션</li>
+<li>출력 데이터소스에 저장하는 액션</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>액션 지정 시 스파크 잡 시작<ul>
+<li><strong>스파크 잡 (job)</strong><ul>
+<li>필터 (좁은 트랜스포메이션) 수행</li>
+<li>-&gt; 파티션 별로 레코드 수를 카운트 (넓은 트랜스포메이션)</li>
+<li>-&gt; 각 언어에 적합한 네이티브 객체에 결과 모음</li>
+</ul>
+</li>
+<li>스파크 UI로 잡 모니터링 가능</li>
+<li><em>스파크 잡은 개별 액션에 의해 트리거되는 다수의 트랜스포메이션으로 이루어져 있다</em></li>
+</ul>
+</li>
+</ul>
+<h3 id="2-9-스파크-UI"><a href="#2-9-스파크-UI" class="headerlink" title="2.9 스파크 UI"></a>2.9 스파크 UI</h3><ul>
+<li>드라이버 노드의 4040 포트</li>
+<li>스파크 잡의 상태, 환경 설정, 클러스터 상태 등의 정보 확인 가능</li>
+</ul>
+<h3 id="2-10-종합-예제"><a href="#2-10-종합-예제" class="headerlink" title="2.10 종합 예제"></a>2.10 종합 예제</h3><ul>
+<li>미국 교통통계국의 항공운항 데이터 중 일부로 실습<ul>
+<li><a target="_blank" rel="noopener" href="https://bit.ly/2yw2fCx">샘플 데이터</a> : 반정형(semi-structured), csv 포맷</li>
+<li>(=&gt; 부록 A의 도커 이미지 사용 시 이미 포함)</li>
+</ul>
+</li>
+<li>스파크는 다양한 데이터소스 지원<ul>
+<li>SparkSession의 DataFrameReader 클래스 사용해서 읽음</li>
+<li>예제는 <strong>스키마 추론 (Schema inference)</strong> 기능 추가<ul>
+<li>스파크는 각 컬럼의 데이터 타입 추론을 위해 적은 양의 데이터를 읽음 </li>
+</ul>
+</li>
+<li>DataFrame 은 불특적 다수의 로우와 컬럼<ul>
+<li>지연 연산 형태의 트렌스포메이션이므로 row 수 알 수 X</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="예제-1"><a href="#예제-1" class="headerlink" title="예제 1"></a>예제 1</h4><details><summary class="point-color-can-hover">예제 1 펼치기</summary>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">$ head /data/flight-data/csv/2015-summary.csv</span><br><span class="line">DEST_COUNTRY_NAME,ORIGIN_COUNTRY_NAME,count</span><br><span class="line">United States,Romania,15</span><br><span class="line">United States,Croatia,1</span><br><span class="line">..</span><br><span class="line"></span><br><span class="line"><span class="comment"># spark-shell (scala)</span></span><br><span class="line">scala&gt; val flightData2015 = spark.read.option(<span class="string">&quot;inferSchema&quot;</span>, <span class="string">&quot;true&quot;</span>).option(<span class="string">&quot;header&quot;</span>, <span class="string">&quot;true&quot;</span>).csv(<span class="string">&quot;/data/flight-data/csv/2015-summary.csv&quot;</span>)</span><br><span class="line">flightData2015: org.apache.spark.sql.DataFrame = [DEST_COUNTRY_NAME: string, ORIGIN_COUNTRY_NAME: string ... 1 more field]</span><br><span class="line"></span><br><span class="line">scala&gt; flightData2015.take(3)</span><br><span class="line">res0: Array[org.apache.spark.sql.Row] = Array([United States,Romania,15], [United States,Croatia,1], [United States,Ireland,344])</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">scala&gt; flightData2015.sort(<span class="string">&quot;count&quot;</span>).explain()</span><br><span class="line">== Physical Plan ==</span><br><span class="line">*(2) Sort [count<span class="comment">#12 ASC NULLS FIRST], true, 0</span></span><br><span class="line">+- Exchange rangepartitioning(count<span class="comment">#12 ASC NULLS FIRST, 200)</span></span><br><span class="line">   +- *(1) FileScan csv [DEST_COUNTRY_NAME<span class="comment">#10,ORIGIN_COUNTRY_NAME#11,count#12] Batched: false, Format: CSV, Location: InMemoryFileIndex[file:/data/flight-data/csv/2015-summary.csv], PartitionFilters: [], PushedFilters: [], ReadSchema: struct&lt;DEST_COUNTRY_NAME:string,ORIGIN_COUNTRY_NAME:string,count:int&gt;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 셔플 파티션 default 200개 =&gt; 5개</span></span><br><span class="line">scala&gt; spark.conf.set(<span class="string">&quot;spark.sql.shuffle.partitions&quot;</span>, <span class="string">&quot;5&quot;</span>)</span><br><span class="line"></span><br><span class="line">scala&gt; flightData2015.sort(<span class="string">&quot;count&quot;</span>).explain()</span><br><span class="line">== Physical Plan ==</span><br><span class="line">*(2) Sort [count<span class="comment">#12 ASC NULLS FIRST], true, 0</span></span><br><span class="line">+- Exchange rangepartitioning(count<span class="comment">#12 ASC NULLS FIRST, 5)</span></span><br><span class="line">   +- *(1) FileScan csv [DEST_COUNTRY_NAME<span class="comment">#10,ORIGIN_COUNTRY_NAME#11,count#12] Batched: false, Format: CSV, Location: InMemoryFileIndex[file:/data/flight-data/csv/2015-summary.csv], PartitionFilters: [], PushedFilters: [], ReadSchema: struct&lt;DEST_COUNTRY_NAME:string,ORIGIN_COUNTRY_NAME:string,count:int&gt;</span></span><br><span class="line"></span><br><span class="line">scala&gt; flightData2015.sort(<span class="string">&quot;count&quot;</span>).take(2)</span><br><span class="line">res3: Array[org.apache.spark.sql.Row] = Array([United States,Singapore,1], [Moldova,United States,1])</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+</details>
+
+<blockquote>
+<ul>
+<li><code>take(n)</code> : Action</li>
+<li><code>sort()</code> :  Transformation (넓은) <ul>
+<li>DataFrame 을 변경하지 않고 새로운 DataFrame을 생성해 반환</li>
+</ul>
+</li>
+<li><code>explain()</code> <ul>
+<li>DataFrame의 계보(lineage) 나 스파크 쿼리 실행 계획 출력</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<ul>
+<li>실행 계획? : 디버깅과 스파크의 실행과정을 이해하는데 도움을 주는 도구<ul>
+<li>위에서 아래방향으로 읽는다</li>
+<li>최종 결과는 가장 위, 데이터소스는 가장 아래</li>
+</ul>
+</li>
+<li>DataFrame의 계보<ul>
+<li>트랜스포메이션의 논리적 실행 계획 -&gt; DataFrame의 계보 정의</li>
+<li>-&gt; 계보를 통해 스파크가 입력데이터에 수행한 연산을 전체 파티션에서 어떻게 재연산하는지 알 수 있음</li>
+<li><em>함수형 프로그래밍의 핵심</em> (Pure Function, 같은 입력 -&gt; 같은 출력)</li>
+</ul>
+</li>
+<li>사용자는 물리적 데이터를 직접 다루지 않고, 물리적 실행 특성을 제어<ul>
+<li>예시 =&gt; 파티션 수 변경 <code>spark.conf.set(&quot;spark.sql.shuffle.partitions&quot;, &quot;5&quot;)</code></li>
+<li>스파크 UI (4040 포트) 에서 스파크 잡 물리적, 논리적 실행 특성 확인 가능 <img width="500" alt="sparkui" src="https://user-images.githubusercontent.com/26691216/105624926-cfbfdf00-5e68-11eb-9407-e58a5f4688a9.png">
+
+
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="예제-2-SQL"><a href="#예제-2-SQL" class="headerlink" title="예제 2 (SQL)"></a>예제 2 (SQL)</h4><details><summary class="point-color-can-hover">예제 2-1 펼치기</summary>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1) SQL 사용</span></span><br><span class="line">scala&gt; flightData2015.createOrReplaceTempView(<span class="string">&quot;flight_data_2015&quot;</span>)</span><br><span class="line">scala&gt; val sqlWay = spark.sql(<span class="string">&quot;&quot;</span><span class="string">&quot;</span></span><br><span class="line"><span class="string">     | SELECT DEST_COUNTRY_NAME, count(1)</span></span><br><span class="line"><span class="string">     | FROM flight_data_2015</span></span><br><span class="line"><span class="string">     | GROUP BY DEST_COUNTRY_NAME</span></span><br><span class="line"><span class="string">     | &quot;</span><span class="string">&quot;&quot;</span>)</span><br><span class="line"></span><br><span class="line">scala&gt; sqlWay.explain</span><br><span class="line">== Physical Plan ==</span><br><span class="line">*(2) HashAggregate(keys=[DEST_COUNTRY_NAME<span class="comment">#10], functions=[count(1)])</span></span><br><span class="line">+- Exchange hashpartitioning(DEST_COUNTRY_NAME<span class="comment">#10, 5)</span></span><br><span class="line">   +- *(1) HashAggregate(keys=[DEST_COUNTRY_NAME<span class="comment">#10], functions=[partial_count(1)])</span></span><br><span class="line">      +- *(1) FileScan csv [DEST_COUNTRY_NAME<span class="comment">#10] Batched: false, Format: CSV, Location: InMemoryFileIndex[file:/data/flight-data/csv/2015-summary.csv], PartitionFilters: [], PushedFilters: [], ReadSchema: struct&lt;DEST_COUNTRY_NAME:string&gt;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2) DataFrame 사용</span></span><br><span class="line">scala&gt; val dataFrameWay = flightData2015.groupBy(<span class="string">&quot;DEST_COUNTRY_NAME&quot;</span>).count()</span><br><span class="line">dataFrameWay: org.apache.spark.sql.DataFrame = [DEST_COUNTRY_NAME: string, count: bigint]</span><br><span class="line"></span><br><span class="line">scala&gt; dataFrameWay.explain</span><br><span class="line">== Physical Plan ==</span><br><span class="line">*(2) HashAggregate(keys=[DEST_COUNTRY_NAME<span class="comment">#10], functions=[count(1)])</span></span><br><span class="line">+- Exchange hashpartitioning(DEST_COUNTRY_NAME<span class="comment">#10, 5)</span></span><br><span class="line">   +- *(1) HashAggregate(keys=[DEST_COUNTRY_NAME<span class="comment">#10], functions=[partial_count(1)])</span></span><br><span class="line">      +- *(1) FileScan csv [DEST_COUNTRY_NAME<span class="comment">#10] Batched: false, Format: CSV, Location: InMemoryFileIndex[file:/data/flight-data/csv/2015-summary.csv], PartitionFilters: [], PushedFilters: [], ReadSchema: struct&lt;DEST_COUNTRY_NAME:string&gt;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+</details>
+
+<ul>
+<li>스파크는 언어에 무관하게 같은 방식으로 트랜스포메이션 실행<ul>
+<li>SQL, DataFrame(R, Python, Scalar, Java) 에서 비즈니스 로직 표현</li>
+<li>스파크에서 코드 실행 전에 로직을 기본 실행계획(<code>explain</code>) 으로 컴파일</li>
+</ul>
+</li>
+<li>스파크 SQL 사용시 모든 DataFrame =&gt; 테이블, 뷰 (임시 테이블) 로 등록<ul>
+<li>위에서 설명했듯 <strong>같은 실행 계획</strong>으로 컴파일하므로 성능차이 X</li>
+</ul>
+</li>
+</ul>
+<details><summary class="point-color-can-hover">예제 2-2 펼치기</summary>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># &#x27;최대 비행 횟수&#x27; 구하기</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># SQL 쿼리</span></span><br><span class="line">scala&gt; spark.sql(<span class="string">&quot;SELECT max(count) from flight_data_2015&quot;</span>).take(1)</span><br><span class="line">res9: Array[org.apache.spark.sql.Row] = Array([370002])</span><br><span class="line"></span><br><span class="line"><span class="comment"># DataFrame 구문 _ max 함수 (트랜스포메이션) 사용</span></span><br><span class="line">scala&gt; import org.apache.spark.sql.functions.max</span><br><span class="line"></span><br><span class="line">scala&gt; flightData2015.select(max(<span class="string">&quot;count&quot;</span>)).take(1)</span><br><span class="line">res10: Array[org.apache.spark.sql.Row] = Array([370002])</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># &#x27;상위 5개의 도착 국가&#x27; 구하기</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># SQL 쿼리</span></span><br><span class="line">scala&gt; val maxSql = spark.sql(<span class="string">&quot;&quot;</span><span class="string">&quot;</span></span><br><span class="line"><span class="string">     | SELECT DEST_COUNTRY_NAME, sum(count) as destination_total</span></span><br><span class="line"><span class="string">     | FROM flight_data_2015</span></span><br><span class="line"><span class="string">     | GROUP BY DEST_COUNTRY_NAME</span></span><br><span class="line"><span class="string">     | ORDER BY sum(count) DESC</span></span><br><span class="line"><span class="string">     | LIMIT 5</span></span><br><span class="line"><span class="string">     | &quot;</span><span class="string">&quot;&quot;</span>)</span><br><span class="line">maxSql: org.apache.spark.sql.DataFrame = [DEST_COUNTRY_NAME: string, destination_total: bigint]</span><br><span class="line"></span><br><span class="line">scala&gt; maxSql.show()</span><br><span class="line">+-----------------+-----------------+</span><br><span class="line">|DEST_COUNTRY_NAME|destination_total|</span><br><span class="line">+-----------------+-----------------+</span><br><span class="line">|    United States|           411352|</span><br><span class="line">|           Canada|             8399|</span><br><span class="line">|           Mexico|             7140|</span><br><span class="line">|   United Kingdom|             2025|</span><br><span class="line">|            Japan|             1548|</span><br><span class="line">+-----------------+-----------------+</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># DataFrame 구문</span></span><br><span class="line">scala&gt; import org.apache.spark.sql.functions.desc</span><br><span class="line"></span><br><span class="line">scala&gt; flightData2015.groupBy(<span class="string">&quot;DEST_COUNTRY_NAME&quot;</span>).sum(<span class="string">&quot;count&quot;</span>).withColumnRenamed(<span class="string">&quot;sum(count)&quot;</span>, <span class="string">&quot;destination_total&quot;</span>).sort(desc(<span class="string">&quot;destination_total&quot;</span>)).<span class="built_in">limit</span>(5).show()</span><br><span class="line">+-----------------+-----------------+</span><br><span class="line">|DEST_COUNTRY_NAME|destination_total|</span><br><span class="line">+-----------------+-----------------+</span><br><span class="line">|    United States|           411352|</span><br><span class="line">|           Canada|             8399|</span><br><span class="line">|           Mexico|             7140|</span><br><span class="line">|   United Kingdom|             2025|</span><br><span class="line">|            Japan|             1548|</span><br><span class="line">+-----------------+-----------------+</span><br><span class="line"></span><br><span class="line"><span class="comment"># 코드 수행 단계 : CSV 파일 =&gt; (1) read -&gt; (2) groupBy -&gt; (3) sum -&gt; (4) withColumnRenamed -&gt; (5) sort -&gt; (6) limit -&gt; (7) collect =&gt; Array(..)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># scala&gt; ~.explain</span></span><br><span class="line">== Physical Plan ==</span><br><span class="line">TakeOrderedAndProject(<span class="built_in">limit</span>=5, orderBy=[destination_total<span class="comment">#108L DESC NULLS LAST], output=[DEST_COUNTRY_NAME#10,destination_total#108L])</span></span><br><span class="line">+- *(2) HashAggregate(keys=[DEST_COUNTRY_NAME<span class="comment">#10], functions=[sum(cast(count#12 as bigint))])</span></span><br><span class="line">   +- Exchange hashpartitioning(DEST_COUNTRY_NAME<span class="comment">#10, 5)</span></span><br><span class="line">      +- *(1) HashAggregate(keys=[DEST_COUNTRY_NAME<span class="comment">#10], functions=[partial_sum(cast(count#12 as bigint))])</span></span><br><span class="line">         +- *(1) FileScan csv [DEST_COUNTRY_NAME<span class="comment">#10,count#12] Batched: false, Format: CSV, Location: InMemoryFileIndex[file:/data/flight-data/csv/2015-summary.csv], PartitionFilters: [], PushedFilters: [], ReadSchema: struct&lt;DEST_COUNTRY_NAME:string,count:int&gt;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+</details>
+
+<ul>
+<li>실행계획은 트랜스포메이션의 <strong>지향성 비순환 그래프 (Directed Acyclic Graph, DAG)</strong><ul>
+<li>액션이 호출되면 결과를 만들어낸다</li>
+<li>DAG의 각 단계는 불변성을 가진 신규 DataFrame을 생성</li>
+</ul>
+</li>
+<li>예제의 전체 코드 수행 단계 (7단계) 는 p.86 [그림 2-10] 참조<ul>
+<li>실제 실행 계획 (<code>explain</code> 이 출력하는) 은 물리적인 실행 시점에서 수행하는 최적화로 인해 다를 수 있음</li>
+<li>직접 explain 해보면 책의 explain 과도 다르게 출력됨 </li>
+</ul>
+</li>
+</ul>
+<h3 id="2-11-정리"><a href="#2-11-정리" class="headerlink" title="2.11 정리"></a>2.11 정리</h3><ul>
+<li>트랜스포메이션, 액션, DataFrame 실행 계획 최적화 방법<ul>
+<li>트랜스포메이션의 지향성 비순환 그래프(DAG) 를 지연 실행하여 최적화</li>
+</ul>
+</li>
+<li>예제를 통한 데이터가 파티션으로 구성되는 방법, 복잡한 트랜스포메이션 작업 실행 단계 확인</li>
+</ul>
+<br/>
+
+<h3 id="📒-단어장"><a href="#📒-단어장" class="headerlink" title="📒 단어장"></a>📒 단어장</h3><ul>
+<li>셔플 (Shuffle) : 스파크카 클러스터에서 파티션을 교환<ul>
+<li>스파크는 셔플의 결과를 디스크에 저장</li>
+</ul>
+</li>
+<li>가환성 (Commutative) : 두 대상의 연산 결과가 순서와 관계없이 동일 (-&gt; 교환 법칙)</li>
+</ul>
+</div><p class="post-tags"><i class="fa fa-tags" aria-hidden="true"></i><a href="/tags/study/">#study</a><a href="/tags/book/">#book</a><a href="/tags/spark/">#spark</a><a href="/tags/apache/">#apache</a></p></article></div><footer><div class="paginator"><a class="prev" href="/2021/01/24/Spark-The-Definitive-Guide-3%EC%9E%A5/">PREV</a><a class="next" href="/2021/01/20/Spark-The-Definitive-Guide-1%EC%9E%A5/">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'minsw-github-io';
+var disqus_identifier = '2021/01/24/Spark-The-Definitive-Guide-2장/';
+var disqus_title = '&amp;#039;Spark The Definitive Guide&amp;#039; 2장 - 스파크 찍어먹기';
+var disqus_url = 'https://minsw.github.io/2021/01/24/Spark-The-Definitive-Guide-2장/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//#{theme.disqus}.disqus.com/count.js" async></script><div class="copyright"><p>© 2018 - 2021 <a href="https://minsw.github.io">Lukka Min</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-143001954-1",'auto');ga('send','pageview');</script><link rel="stylesheet" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css" media="screen" type="text/css"><script src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script><script>$(function(){$('.datatable').dataTable( {"order": [[ 0, "desc" ]],"iDisplayLength": -1,"lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]} );});</script></body></html>
