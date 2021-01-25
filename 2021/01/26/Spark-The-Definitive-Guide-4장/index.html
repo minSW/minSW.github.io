@@ -1,0 +1,201 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> &#039;Spark The Definitive Guide&#039; 4장 - 눈 떠, 구조적 API 들어간다 · Look out</title><meta name="description" content="&amp;#039;Spark The Definitive Guide&amp;#039; 4장 - 눈 떠, 구조적 API 들어간다 - Lukka Min"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/cover.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link rel="search" type="application/opensearchdescription+xml" href="https://minsw.github.io/atom.xml" title="Look out"><script src="//code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script><meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Look out" type="application/atom+xml">
+</head><body><div class="wrap"><header><a class="logo-link" href="/"><img src="/cover.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a class="nav-list-link" href="/" target="_self">BLOG</a></li><li class="nav-list-item"><a class="nav-list-link" href="/archives/" target="_self">ARCHIVE</a></li><li class="nav-list-item"><a class="nav-list-link" href="/tags/" target="_self">TAG</a></li><li class="nav-list-item"><a class="nav-list-link" href="https://github.com/minSW" target="_blank">GITHUB</a></li></ul></header><main class="container"></main><div class="post"><article class="post-block"><h1 class="post-title">&#039;Spark The Definitive Guide&#039; 4장 - 눈 떠, 구조적 API 들어간다</h1><div class="post-info">2021년 1월 26일<span class="categories"><i class="fa fa-bookmark" aria-hidden="true"></i></span><a class="post-category" href="/categories/spark/">#spark</a></div><div class="post-content"><br/>
+
+<h4 id="📌-Part-2-구조적-API-DataFrame-SQL-Dataset"><a href="#📌-Part-2-구조적-API-DataFrame-SQL-Dataset" class="headerlink" title="📌 [Part 2] 구조적 API : DataFrame, SQL, Dataset"></a>📌 [Part 2] 구조적 API : DataFrame, SQL, Dataset</h4><h4 id="들어가기전-스파크-기본-개념-살짝-복습-👀"><a href="#들어가기전-스파크-기본-개념-살짝-복습-👀" class="headerlink" title="들어가기전, 스파크 기본 개념 살짝 복습 👀"></a>들어가기전, 스파크 기본 개념 살짝 복습 👀</h4><blockquote>
+<p>스파크는 <code>트랜스포메이션의 처리 과정을 정의하는 분산 프로그래밍 모델</code>.</p>
+<p>(사용자가 정의한) 다수의 <strong>트랜스포메이션</strong>은 → <strong>DAG</strong> (지향성 비순환 그래프) 로 표현되는 명령을 만들고<br><strong>액션</strong>은 하나의 잡을 클러스터에서 실행하기 위해 → 스테이지와 태스크로 나누고 DAG 처리 프로세스를 실행</p>
+<p>이런 트랜스포메이션과 액션으로 다루는 논리적 구조? =&gt; <strong><u>DataFrame, Dataset</u></strong></p>
+</blockquote>
+<img width="300" alt="start" src="https://user-images.githubusercontent.com/26691216/105742251-98dbed00-5f7e-11eb-98c3-96ff8f8679dc.gif"/>
+
+<center><h2>_ _ _</h2></center>
+
+<br/>
+
+<hr>
+<h1 id="Chapter-4-구조적-API-개요"><a href="#Chapter-4-구조적-API-개요" class="headerlink" title="Chapter 4 구조적 API 개요"></a>Chapter 4 구조적 API 개요</h1><p>반드시 이해해야 (한다고) 하는 아래 세 가지 기본개념을 설명한다.</p>
+<ul>
+<li><code>타입형(typed)</code> / <code>비타입형(untyped)</code> API 개념과 차이점</li>
+<li>핵심 용어</li>
+<li>스파크가 구조적 API의 데이터 흐름을 해석하고 클러스터에서 실행하는 방식</li>
+</ul>
+<h3 id="구조적-API-의-특징"><a href="#구조적-API-의-특징" class="headerlink" title="구조적 API 의 특징"></a>구조적 API 의 특징</h3><ul>
+<li>데이터 흐름을 정의하는 기본 추상화 개념</li>
+<li>다양한 유형의 데이터 처리 가능<ul>
+<li>비정형 로그파일, 반정형 CSV 파일, 정형적 Parquet (파-케이) 파일 등</li>
+</ul>
+</li>
+<li>배치(batch), 스트리밍 (streaming) 처리에서 사용 가능<ul>
+<li>배치 작업 &lt;-&gt; 스트리밍 작업 : 쉽게 변환 가능</li>
+</ul>
+</li>
+<li>구조적 API 의 세 가지 분산 컬렉션 API<ul>
+<li>Dataset</li>
+<li>DataFrame</li>
+<li>SQL 테이블과 뷰</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-1-DataFrame과-Dataset"><a href="#4-1-DataFrame과-Dataset" class="headerlink" title="4.1 DataFrame과 Dataset"></a>4.1 DataFrame과 Dataset</h3><blockquote>
+<p>DataFrame (코드 사용) == 테이블/뷰 (SQL 사용)</p>
+</blockquote>
+<ul>
+<li>스파크의 구조화된 컬렉션 개념 : <a href="https://minsw.github.io/2021/01/24/Spark-The-Definitive-Guide-2%EC%9E%A5/#2-6-DataFrame">DataFrame [2.6]</a> / <a href="https://minsw.github.io/2021/01/24/Spark-The-Definitive-Guide-3%EC%9E%A5/#3-2-Dataset-%ED%83%80%EC%9E%85-%EC%95%88%EC%A0%95%EC%84%B1%EC%9D%84-%EC%A0%9C%EA%B3%B5%ED%95%98%EB%8A%94-%EA%B5%AC%EC%A1%B0%EC%A0%81-API">Dataset [3.2]</a></li>
+<li>그래서 이것들이 뭔데?<ul>
+<li>잘 정의된 row, column을 갖는 분산 테이블 형태의 컬렉션<ul>
+<li>각 column은 다른 column과 동일한 수의 row (값 없음은 null)</li>
+<li>모든 row는 같은 데이터 타입 정보</li>
+</ul>
+</li>
+<li>지연 연산의 실행 계획<ul>
+<li>결과를 생성하기 위해 어떤 데이터에 어떤 연산을 적용해야하는지 정의</li>
+</ul>
+</li>
+<li>불변성 (Immutability)</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-2-스키마"><a href="#4-2-스키마" class="headerlink" title="4.2 스키마"></a>4.2 스키마</h3><ul>
+<li>스키마 : DataFrame의 컬럼명과 데이터 타입 정의<ul>
+<li>직접 정의 or Schema-on-read (데이터소스에서 얻는 것)</li>
+<li>여러 데이터 타입으로 구성</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-3-스파크의-구조적-데이터-타입-개요"><a href="#4-3-스파크의-구조적-데이터-타입-개요" class="headerlink" title="4.3 스파크의 구조적 데이터 타입 개요"></a>4.3 스파크의 구조적 데이터 타입 개요</h3><ul>
+<li><p>스파크가 사용하는 <strong>카탈리스트 (Catalyst)</strong> 엔진 </p>
+<ul>
+<li>다양한 실행 최적화 기능 제공</li>
+<li>실행 계획과 처리에 사용하는 자체 데이터 타입 정보를 가짐</li>
+</ul>
+</li>
+<li><p>스파크는 사실상 ‘프로그래밍 언어’</p>
+<ul>
+<li><p>여러 언어 API와 직접 매핑 (각 언어에 대한 매핑 테이블을 가짐)</p>
+</li>
+<li><p>파이썬이나 R 로 구조적 API 사용해도 =&gt; 대부분의 연산은 <del>각 언어의 자체 데이터 타입</del> 이 아닌 <strong>스파크의 데이터 타입</strong> 사용 (카탈리스트 엔진에서 변환)</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> df = spark.range(<span class="number">500</span>).toDF(<span class="string">&quot;number&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// scala가 아닌 &#x27;spark&#x27;의 덧셈 연산 수행</span></span><br><span class="line">df.select(df.col(<span class="string">&quot;number&quot;</span>) + <span class="number">10</span>)</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><code>비타입형(untyped)</code> DataFrame vs <code>타입형(typed)</code> Dataset</p>
+<ul>
+<li>DataFrame, Dataset 모두 데이터 타입은 존재</li>
+<li>그러나 스키마에 명시된 데이터 타입 <strong>일치 여부를 확인하는 시점</strong> 차이<ul>
+<li><u>DataFrame은 <strong>런타임</strong>에</u> 일치 여부 확인 =&gt; <code>비타입형(untyped)</code></li>
+<li><u>Dataset은 <strong>컴파일 타임</strong>에</u> 일치 여부 확인 =&gt; <code>타입형(typed)</code></li>
+</ul>
+</li>
+<li>DataFrame 은 Row 타입 사용<ul>
+<li><strong>Row 타입</strong> : 스파크가 사용하는 ‘연산에 최적화된 인메모리 포멧’ 의 내부적 표현 방식 =&gt; 언어와 무관한 동일한 효과/효율성</li>
+<li>매우 효율적인 연산 (vs Dataset의 JVM 데이터 타입 : GC, 객체 초기화 부하 .. )</li>
+</ul>
+</li>
+<li>Dataset은 지정된 데이터 타입(T) 사용<ul>
+<li>엄격한 데이터 타입 검증 =&gt; CHAPTER 11 참고</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>컬럼 (Column)</p>
+<ul>
+<li>단순 데이터 타입 (정수형, 문자열), 복합 데이터 타입 (배열, 맵), null 값 표현</li>
+<li>스파크는 데이터 타입의 모든 정보를 추적, 다양한 컬럼 변환 방법 제공</li>
+<li>스파크의 컬럼 == 테이블의 컬럼</li>
+</ul>
+</li>
+<li><p>로우 (Row)</p>
+<ul>
+<li>데이터 레코드 (DataFrame의 레코드는 Row 타입)</li>
+<li>로우는 SQL, RDD, 데이터 소스에서 얻거나 직접 만들거나<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">spark.range(<span class="number">2</span>).toDF().collect()</span><br><span class="line"><span class="comment">// res165: Array[org.apache.spark.sql.Row] = Array([0], [1])</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>스파크의 <strong>데이터 타입</strong></p>
+<ul>
+<li>스파크는 여러가지 내부 데이터 타입을 가짐</li>
+<li><code>p.116 ~ 118</code> [표 4-1 ~ 3] 스파크가 지원하는 언어별 매핑 정보 (파이썬/스칼라/자바 데이터 타입 매핑)</li>
+<li>최신 데이터 타입은 <a target="_blank" rel="noopener" href="http://bit.ly/2EdflXW">스파크 공식 문서</a> 참고</li>
+<li>예시) 언어 별 데이터 타입 초기화 및 정의 방법<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// scala</span></span><br><span class="line"><span class="keyword">import</span> org.apache.spark.sql.types._</span><br><span class="line"><span class="keyword">val</span> b = <span class="type">ByteType</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// java (Factory method)</span></span><br><span class="line"><span class="keyword">import</span> org.apache.spark.sql.types.DataTypes;</span><br><span class="line">ByteType x = DataTypes.ByteType;</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># python</span></span><br><span class="line"><span class="keyword">from</span> pyspark.sql.types <span class="keyword">import</span> *</span><br><span class="line">b = ByteType()</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-4-구조적-API의-실행-과정"><a href="#4-4-구조적-API의-실행-과정" class="headerlink" title="4.4 구조적 API의 실행 과정"></a>4.4 구조적 API의 실행 과정</h3><blockquote>
+<p>구조적 API 쿼리 (사용자 코드) → 실제 실행 코드 변환 과정</p>
+<ol>
+<li>[👩🏻‍💻] DataFrame/Dataset/SQL을 이용해 코드 작성</li>
+<li>[Spark ✨] 코드 =&gt; <strong>논리적 실행 계획</strong> 으로 변환 (정상적 코드일 경우)</li>
+<li>[Spark ✨] 논리적 실행 계획 =&gt; <strong>물리적 실행 계획</strong> 으로 변환. 추가적인 최적화 가능한지 확인</li>
+<li>[Spark ✨] 클러스터에서 <strong>물리적 실행 계획 (RDD 처리)</strong> 실행</li>
+</ol>
+</blockquote>
+<ul>
+<li><p>좀 더 가깝게 설명하자면..</p>
+<ul>
+<li>[본인] 이 스파크 코드 작성하고 console 이나 <code>spark-submit</code> 으로 실행</li>
+<li>-&gt; [카탈리스트 옵티마이저] 가 코드를 받고 실제 실행 계획 (물리적) 생성</li>
+<li>-&gt; [스파크] 는 코드 실행 &amp; 결과 반환</li>
+</ul>
+</li>
+<li><p>논리적 실행 계획</p>
+  <img width="700" alt="mermaid-1" src="https://user-images.githubusercontent.com/26691216/105745516-b494c280-5f81-11eb-972a-827a5936fe0f.png"/>
+  <details><summary style="color:lightgray"> theme (neutral) </summary>
+
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">graph LR</span><br><span class="line">A[&#x2F;코드&#x2F;]-- 1_ --&gt;B[검증 전 ...]</span><br><span class="line">B-- 2_ Analzer --&gt;C[검증된 ...]</span><br><span class="line">C-- 3_ Optimizer --&gt;D[최적화된 논리적 실행 계획]</span><br></pre></td></tr></table></figure>
+  </details>
+
+<ol>
+<li>사용자 코드 → 검증 전 논리적 실행 계획 (unresolved logical plan)<ul>
+<li>추상적 트랜스포메이션만 표현 (드라이버, 익스큐터 고려 X)</li>
+<li>사용자의 표현식을 최적화된 표현으로 변환</li>
+</ul>
+</li>
+<li>분석기 (Analyzer) : <strong>카탈로그</strong>, 모든 테이블 저장소, DataFrame 정보 =&gt; 컬럼과 테이블 검증</li>
+<li>논리적 최적화 (Catalyst Optimizer) : 논리적 실행 계획을 최적화하는 규칙의 모음 (predicate pushing down, 선택절 구문)</li>
+</ol>
+</li>
+<li><p>물리적 실행 계획</p>
+  <img width="700" alt="mermaid-2" src="https://user-images.githubusercontent.com/26691216/105745527-b8284980-5f81-11eb-8d36-554b97959946.png"/>
+  <details><summary style="color:lightgray"> theme (neutral) </summary>
+
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">graph LR</span><br><span class="line">A[최적화된 논리적 실행 계획] --&gt; B[물리적]</span><br><span class="line">A --&gt; C[실행계획s]</span><br><span class="line">B --&gt; D&#123;비용 모델 비교&#125;</span><br><span class="line">C --&gt; D</span><br><span class="line">D --&gt; E</span><br><span class="line">[최적의 물리적 실행 계획]</span><br><span class="line">E --&gt; F&gt;클러스터에서 처리]</span><br></pre></td></tr></table></figure>
+  </details>
+
+<ul>
+<li>(== 스파크의 실행 계획)</li>
+<li>논리적 실행 계획을 클러스터 환경에서 실행하는 방법을 정의</li>
+<li>비용 모델 비교 후 최적의 전략 선택 (ex. 조인 연산 수행 비용 계산)</li>
+<li>=&gt; RDD, 트랜스포메이션으로 변환하고 컴파일 (<em>이래서 스파크를 ‘컴파일러’라고 부르기도</em>)</li>
+</ul>
+</li>
+<li><p>실행</p>
+<ul>
+<li>물리적 실행 계획 선정 후 RDD (저수준 인터페이스) 대상으로 모든 코드 실행</li>
+<li>추가 최적화 수행 : 런타임에 자바 바이트 코드 생성 (=&gt; 전체 테스크나 스테이지 제거 가능)</li>
+<li>=&gt; 처리 결과 사용자에게 반환</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-5-정리"><a href="#4-5-정리" class="headerlink" title="4.5 정리"></a>4.5 정리</h3><ul>
+<li>Spark와 구조적 API</li>
+<li>사용자 코드 -&gt; 물리적 실행 코드 변환 과정</li>
+</ul>
+<h3 id="📒-단어장"><a href="#📒-단어장" class="headerlink" title="📒 단어장"></a>📒 단어장</h3><ul>
+<li>카탈리스트 엔진 (Catalyst Optimizer) : DataFrame DSL, SQL 을 하위 레벨의 RDD 연산으로 변환하는 Optimizer<ul>
+<li>책에서 언급한 카탈리스트 엔진 구현 영상 - <a target="_blank" rel="noopener" href="https://youtu.be/5ajs8EIPWGI">youtube1</a>, <a target="_blank" rel="noopener" href="https://youtu.be/GDeePbbCz2g">youtube2</a></li>
+<li>ref. <a target="_blank" rel="noopener" href="https://thebook.io/006908/part02/ch05/05/">https://thebook.io/006908/part02/ch05/05/</a></li>
+<li>ref. <a target="_blank" rel="noopener" href="https://medium.com/@leeyh0216/spark-sql-6dc3d645cc31">https://medium.com/@leeyh0216/spark-sql-6dc3d645cc31</a></li>
+</ul>
+</li>
+</ul>
+</div><p class="post-tags"><i class="fa fa-tags" aria-hidden="true"></i><a href="/tags/study/">#study</a><a href="/tags/book/">#book</a><a href="/tags/spark/">#spark</a><a href="/tags/apache/">#apache</a></p></article></div><footer><div class="paginator"><a class="next" href="/2021/01/24/Spark-The-Definitive-Guide-3%EC%9E%A5/">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'minsw-github-io';
+var disqus_identifier = '2021/01/26/Spark-The-Definitive-Guide-4장/';
+var disqus_title = '&amp;#039;Spark The Definitive Guide&amp;#039; 4장 - 눈 떠, 구조적 API 들어간다';
+var disqus_url = 'https://minsw.github.io/2021/01/26/Spark-The-Definitive-Guide-4장/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//#{theme.disqus}.disqus.com/count.js" async></script><div class="copyright"><p>© 2018 - 2021 <a href="https://minsw.github.io">Lukka Min</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-143001954-1",'auto');ga('send','pageview');</script><link rel="stylesheet" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css" media="screen" type="text/css"><script src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script><script>$(function(){$('.datatable').dataTable( {"order": [[ 0, "desc" ]],"iDisplayLength": -1,"lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]} );});</script></body></html>
