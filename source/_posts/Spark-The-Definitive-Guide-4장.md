@@ -55,9 +55,9 @@ tags:
 
 - 스파크의 구조화된 컬렉션 개념 : [DataFrame [2.6]](https://minsw.github.io/2021/01/24/Spark-The-Definitive-Guide-2%EC%9E%A5/#2-6-DataFrame) / [Dataset [3.2]](https://minsw.github.io/2021/01/24/Spark-The-Definitive-Guide-3%EC%9E%A5/#3-2-Dataset-%ED%83%80%EC%9E%85-%EC%95%88%EC%A0%95%EC%84%B1%EC%9D%84-%EC%A0%9C%EA%B3%B5%ED%95%98%EB%8A%94-%EA%B5%AC%EC%A1%B0%EC%A0%81-API)
 - 그래서 이것들이 뭔데?
-  - 잘 정의된 row, column을 갖는 분산 테이블 형태의 컬렉션
-    - 각 column은 다른 column과 동일한 수의 row (값 없음은 null)
-    - 모든 row는 같은 데이터 타입 정보
+  - 잘 정의된 로우(row), 컬럼(column)을 갖는 분산 테이블 형태의 컬렉션
+    - 각 컬럼은 다른 컬럼과 동일한 수의 로우를 가짐 (값 없음은 null)
+    - 모든 로우는 같은 데이터 타입 정보
   - 지연 연산의 실행 계획
     - 결과를 생성하기 위해 어떤 데이터에 어떤 연산을 적용해야하는지 정의
   - 불변성 (Immutability)
@@ -92,11 +92,11 @@ tags:
     - 매우 효율적인 연산 (vs Dataset의 JVM 데이터 타입 : GC, 객체 초기화 부하 .. )
   - Dataset은 지정된 데이터 타입(T) 사용
     - 엄격한 데이터 타입 검증 => CHAPTER 11 참고
-- 컬럼 (Column)
+- 컬럼 (column)
   - 단순 데이터 타입 (정수형, 문자열), 복합 데이터 타입 (배열, 맵), null 값 표현
   - 스파크는 데이터 타입의 모든 정보를 추적, 다양한 컬럼 변환 방법 제공
   - 스파크의 컬럼 == 테이블의 컬럼
-- 로우 (Row)
+- 로우 (row)
   - 데이터 레코드 (DataFrame의 레코드는 Row 타입)
   - 로우는 SQL, RDD, 데이터 소스에서 얻거나 직접 만들거나
     ```scala
