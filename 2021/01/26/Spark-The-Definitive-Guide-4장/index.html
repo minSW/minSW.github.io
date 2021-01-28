@@ -42,9 +42,9 @@
 <ul>
 <li>스파크의 구조화된 컬렉션 개념 : <a href="https://minsw.github.io/2021/01/24/Spark-The-Definitive-Guide-2%EC%9E%A5/#2-6-DataFrame">DataFrame [2.6]</a> / <a href="https://minsw.github.io/2021/01/24/Spark-The-Definitive-Guide-3%EC%9E%A5/#3-2-Dataset-%ED%83%80%EC%9E%85-%EC%95%88%EC%A0%95%EC%84%B1%EC%9D%84-%EC%A0%9C%EA%B3%B5%ED%95%98%EB%8A%94-%EA%B5%AC%EC%A1%B0%EC%A0%81-API">Dataset [3.2]</a></li>
 <li>그래서 이것들이 뭔데?<ul>
-<li>잘 정의된 row, column을 갖는 분산 테이블 형태의 컬렉션<ul>
-<li>각 column은 다른 column과 동일한 수의 row (값 없음은 null)</li>
-<li>모든 row는 같은 데이터 타입 정보</li>
+<li>잘 정의된 로우(row), 컬럼(column)을 갖는 분산 테이블 형태의 컬렉션<ul>
+<li>각 컬럼은 다른 컬럼과 동일한 수의 로우를 가짐 (값 없음은 null)</li>
+<li>모든 로우는 같은 데이터 타입 정보</li>
 </ul>
 </li>
 <li>지연 연산의 실행 계획<ul>
@@ -96,14 +96,14 @@
 </li>
 </ul>
 </li>
-<li><p>컬럼 (Column)</p>
+<li><p>컬럼 (column)</p>
 <ul>
 <li>단순 데이터 타입 (정수형, 문자열), 복합 데이터 타입 (배열, 맵), null 값 표현</li>
 <li>스파크는 데이터 타입의 모든 정보를 추적, 다양한 컬럼 변환 방법 제공</li>
 <li>스파크의 컬럼 == 테이블의 컬럼</li>
 </ul>
 </li>
-<li><p>로우 (Row)</p>
+<li><p>로우 (row)</p>
 <ul>
 <li>데이터 레코드 (DataFrame의 레코드는 Row 타입)</li>
 <li>로우는 SQL, RDD, 데이터 소스에서 얻거나 직접 만들거나<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">spark.range(<span class="number">2</span>).toDF().collect()</span><br><span class="line"><span class="comment">// res165: Array[org.apache.spark.sql.Row] = Array([0], [1])</span></span><br></pre></td></tr></table></figure></li>
@@ -190,7 +190,7 @@
 </ul>
 </li>
 </ul>
-</div><p class="post-tags"><i class="fa fa-tags" aria-hidden="true"></i><a href="/tags/study/">#study</a><a href="/tags/book/">#book</a><a href="/tags/spark/">#spark</a><a href="/tags/apache/">#apache</a></p></article></div><footer><div class="paginator"><a class="next" href="/2021/01/24/Spark-The-Definitive-Guide-3%EC%9E%A5/">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'minsw-github-io';
+</div><p class="post-tags"><i class="fa fa-tags" aria-hidden="true"></i><a href="/tags/study/">#study</a><a href="/tags/book/">#book</a><a href="/tags/spark/">#spark</a><a href="/tags/apache/">#apache</a></p></article></div><footer><div class="paginator"><a class="prev" href="/2021/01/26/Spark-The-Definitive-Guide-5%EC%9E%A5/">PREV</a><a class="next" href="/2021/01/24/Spark-The-Definitive-Guide-3%EC%9E%A5/">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'minsw-github-io';
 var disqus_identifier = '2021/01/26/Spark-The-Definitive-Guide-4장/';
 var disqus_title = '&amp;#039;Spark The Definitive Guide&amp;#039; 4장 - 눈 떠, 구조적 API 들어간다';
 var disqus_url = 'https://minsw.github.io/2021/01/26/Spark-The-Definitive-Guide-4장/';

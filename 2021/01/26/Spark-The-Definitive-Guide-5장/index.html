@@ -1,0 +1,247 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> &#039;Spark The Definitive Guide&#039; 5장 - 구조적 API 기본 연산 · Look out</title><meta name="description" content="&amp;#039;Spark The Definitive Guide&amp;#039; 5장 - 구조적 API 기본 연산 - Lukka Min"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/cover.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link rel="search" type="application/opensearchdescription+xml" href="https://minsw.github.io/atom.xml" title="Look out"><script src="//code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script><meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Look out" type="application/atom+xml">
+</head><body><div class="wrap"><header><a class="logo-link" href="/"><img src="/cover.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a class="nav-list-link" href="/" target="_self">BLOG</a></li><li class="nav-list-item"><a class="nav-list-link" href="/archives/" target="_self">ARCHIVE</a></li><li class="nav-list-item"><a class="nav-list-link" href="/tags/" target="_self">TAG</a></li><li class="nav-list-item"><a class="nav-list-link" href="https://github.com/minSW" target="_blank">GITHUB</a></li></ul></header><main class="container"></main><div class="post"><article class="post-block"><h1 class="post-title">&#039;Spark The Definitive Guide&#039; 5장 - 구조적 API 기본 연산</h1><div class="post-info">2021년 1월 26일<span class="categories"><i class="fa fa-bookmark" aria-hidden="true"></i></span><a class="post-category" href="/categories/spark/">#spark</a></div><div class="post-content"><br/>
+
+<p>오늘의 교훈.<br>도커 이미지에 예제 있다고 신나게 돌리고~ 돌리고~ 하다보면<br>터진다는걸 명심하도록 하자 🥺</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java.io.IOException: No space left on device</span><br></pre></td></tr></table></figure>
+<br/>
+
+<img src="https://user-images.githubusercontent.com/26691216/106086744-1b72d100-6166-11eb-8d99-1deebfa68867.jpg" width="400" alt="jongman">
+<center><i style="color:lightgray"> 인생은 실전이야 친구아</i></center>
+
+<img width="300" alt="bomb" src="https://user-images.githubusercontent.com/26691216/106087261-fcc10a00-6166-11eb-80c2-d339e59bbc99.png">
+
+
+
+<center><h2>_ _ _</h2></center>
+
+<br/>
+
+<hr>
+<h1 id="CHAPTER-5-구조적-API-기본-연산"><a href="#CHAPTER-5-구조적-API-기본-연산" class="headerlink" title="CHAPTER 5 구조적 API 기본 연산"></a>CHAPTER 5 구조적 API 기본 연산</h1><p>CHAPTER 4 는 구조적 API의 핵심 추상화 ‘개념’을 소개<br>CHAPTER 5 는 DataFrame과 그 데이터를 다루는 기본 ‘기능’ 소개</p>
+<blockquote>
+<p><em>‘DataFrame = Row 타입의 <strong>레코드</strong> + 여러 <strong>컬럼</strong>‘</em><br>(각 컬럼명과 데이터 타입은 <strong>스키마</strong>로 정의)</p>
+<p>DataFrame의 <strong>파티셔닝</strong> :  DataFrame (또는 Dataset)이 클러스터에서 물리적으로 배치되는 형태를 정의</p>
+<ul>
+<li><strong>파티셔닝 스키마</strong> : 파티션을 배치하는 방법 정의</li>
+<li>파티셔닝의 분할 기준? =&gt; 특정 컬럼 or 비결정론적(nondeterministically) 값 기반으로 설정</li>
+</ul>
+</blockquote>
+<h3 id="5-1-스키마"><a href="#5-1-스키마" class="headerlink" title="5.1 스키마"></a>5.1 스키마</h3><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> df = spark.read.format(<span class="string">&quot;json&quot;</span>).load(<span class="string">&quot;/data/flight-data/json/2015-summary.json&quot;</span>)</span><br><span class="line">df.printSchema()</span><br><span class="line"></span><br><span class="line"><span class="comment">// root</span></span><br><span class="line"><span class="comment">//  |-- DEST_COUNTRY_NAME: string (nullable = true)</span></span><br><span class="line"><span class="comment">//  |-- ORIGIN_COUNTRY_NAME: string (nullable = true)</span></span><br><span class="line"><span class="comment">//  |-- count: long (nullable = true)</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>스키마는 <strong>DataFrame의 컬럼명과 데이터 타입을 정의</strong></p>
+<ul>
+<li>관련된 모든 것을 하나로 묶는 역할</li>
+</ul>
+</li>
+<li><p>데이터 소스에서 스키마를 얻거나 (Schema-on-read), 직접 정의 가능</p>
+<ul>
+<li>대부분의 비정형 분석 (ad-hoc analysis)에서 schema-on-read 잘 동작</li>
+<li>운영 환경 ETL 작업에 스파크 사용시 <strong>직접 정의 필요</strong> (샘플 데이터 타입에 따른 스키마 추론 방지)</li>
+</ul>
+</li>
+<li><p>스키마는 <code>StructType</code> 객체 </p>
+<ul>
+<li><p>복합 데이터 타입 <code>StructType</code> (=consistOf(<code>StructField</code> 객체))</p>
+</li>
+<li><p>스파크는 자체 데이터 타입 정보를 사용 =&gt; 언어 별 데이터 타입으로 설정 X</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">spark.read.format(<span class="string">&quot;json&quot;</span>).load(<span class="string">&quot;/data/flight-data/json/2015-summary.json&quot;</span>).schema</span><br><span class="line"><span class="comment">// res176: org.apache.spark.sql.types.StructType</span></span><br><span class="line"><span class="comment">//  = StructType(</span></span><br><span class="line"><span class="comment">//        StructField(DEST_COUNTRY_NAME,StringType,true),</span></span><br><span class="line"><span class="comment">//        StructField(ORIGIN_COUNTRY_NAME,StringType,true),</span></span><br><span class="line"><span class="comment">//        StructField(count,LongType,true)</span></span><br><span class="line"><span class="comment">//      )</span></span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+</li>
+</ul>
+<details><summary class="point-color-can-hover">[5.1] 예제 펼치기 - DataFrame에 스키마 적용 예제</summary>
+
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// DataFrame에 스키마를 만들고 적용하는 예제</span></span><br><span class="line"><span class="keyword">import</span> org.apache.spark.sql.types.&#123;<span class="type">StructField</span>, <span class="type">StructType</span>, <span class="type">StringType</span>, <span class="type">LongType</span>&#125;</span><br><span class="line"><span class="keyword">import</span> org.apache.spark.sql.types.<span class="type">Metadata</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> myManualSchema = <span class="type">StructType</span>(<span class="type">Array</span>(</span><br><span class="line">  <span class="type">StructField</span>(<span class="string">&quot;DEST_COUNTRY_NAME&quot;</span>, <span class="type">StringType</span>, <span class="literal">true</span>),</span><br><span class="line">  <span class="type">StructField</span>(<span class="string">&quot;ORIGIN_COUNTRY_NAME&quot;</span>, <span class="type">StringType</span>, <span class="literal">true</span>),</span><br><span class="line">  <span class="type">StructField</span>(<span class="string">&quot;count&quot;</span>, <span class="type">LongType</span>, <span class="literal">false</span>,</span><br><span class="line">    <span class="type">Metadata</span>.fromJson(<span class="string">&quot;&#123;\&quot;hello\&quot;:\&quot;world\&quot;&#125;&quot;</span>))</span><br><span class="line">))</span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> df = (spark.read.format(<span class="string">&quot;json&quot;</span>).schema(myManualSchema)</span><br><span class="line">  .load(<span class="string">&quot;/data/flight-data/json/2015-summary.json&quot;</span>))</span><br></pre></td></tr></table></figure>
+</details>
+
+
+<h3 id="5-2-컬럼과-표현식"><a href="#5-2-컬럼과-표현식" class="headerlink" title="5.2 컬럼과 표현식"></a>5.2 컬럼과 표현식</h3><ul>
+<li><p>스파크의 ‘컬럼’ (=표현식)</p>
+<ul>
+<li>스프레드 시트, R의 dataframe, Pandas의 컬럼과 비슷</li>
+<li>사용자는 <u><strong>표현식</strong></u>으로 DataFrame의 컬럼을 선택, 조작, 제거 가능</li>
+<li>즉 표현식을 사용해 레코드 단위로 계산한 값을 나타내는 논리적 구조. 실제값을 얻으려면 로우 (=&gt; DataFrame) 가 필요</li>
+<li>외부 접근시 <strong>반드시 DataFrame 을 통해야 함</strong></li>
+</ul>
+</li>
+<li><p>컬럼 생성 &amp; 참조 : <code>col()</code> <code>column()</code></p>
+<ul>
+<li>컬럼이 DataFrame에 있는지 없는지는 모름 =&gt; <strong>분석기</strong>가 <strong>카탈로그</strong>에 저장된 정보랑 비교하기 전까지는 미확인 <a href="https://minsw.github.io/2021/01/26/Spark-The-Definitive-Guide-4%EC%9E%A5/#4-4-%EA%B5%AC%EC%A1%B0%EC%A0%81-API%EC%9D%98-%EC%8B%A4%ED%96%89-%EA%B3%BC%EC%A0%95">[4.4] 참고</a></li>
+<li>스칼라는 고유 기능 사용 가능 : <code>$&quot;컬럼명&quot;</code> <code>&#39;컬럼명</code> (<code>&#39;</code> : 틱 마크, 심벌)</li>
+<li>명시적 참조 : <code>DataFrame.col()</code> (조인시 유용)<br>=&gt; 명시적 컬럼 정의 시, 분석기 실행 단계에서 컬럼 확인 절차 생략</li>
+</ul>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.apache.spark.sql.functions.&#123;col, column&#125;</span><br><span class="line">col(<span class="string">&quot;someCol&quot;</span>)</span><br><span class="line">column(<span class="string">&quot;someCol&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// in Scala</span></span><br><span class="line">$<span class="string">&quot;someCol&quot;</span></span><br><span class="line"><span class="symbol">&#x27;someCol</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 명시적 참조</span></span><br><span class="line">df.col(<span class="string">&quot;someCol&quot;</span>)</span><br></pre></td></tr></table></figure></li>
+<li><p><strong>표현식</strong> : <code>expr()</code></p>
+<ul>
+<li>DataFrame 레코드의 여러 값에 대한 트랜스포메이션 집합</li>
+<li>여러 컬럼을 입력받아 식별 -&gt; 다양한 표현식을 각 레코드에 적용 -&gt; <strong>‘단일값’</strong> (복합 데이터 타입) 으로 출력 하는 함수</li>
+<li><em>DataFrame의 컬럼은 ‘표현식’이다</em><ul>
+<li><code>expr(&quot;someCol&quot;)</code> == <code>col(&quot;someCol&quot;)</code> (동일 동작)</li>
+<li>컬럼은 표현식의 일부 기능 제공</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>스파크는 연산 순서를 지정하는 논리적 트리로 컴파일</p>
+<ul>
+<li>DataFrame 코드나 SQL 표현식 작성 시, 실행 시점에 동일한 논리 트리로 컴파일 되므로 동일한 성능 발휘</li>
+<li>예시는 <code>p.129</code> [그림 5-1] 논리적 트리 DAG 참고</li>
+<li><code>expr(&quot;someCol - 5&quot;)</code> == <code>col(&quot;someCol&quot;) - 5</code> == <code>expr(&quot;someCol&quot;) - 5</code>  (다 같은 트랜스포메이션 과정)</li>
+</ul>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 동일한 표현 - col(), expr()</span></span><br><span class="line"><span class="keyword">import</span> org.apache.spark.sql.functions.expr</span><br><span class="line">expr(<span class="string">&quot;(((someCol + 5) * 200) - 6) &lt; otherCol&quot;</span>)</span><br><span class="line"></span><br><span class="line">(((col(<span class="string">&quot;someCol&quot;</span>) + <span class="number">5</span>) * <span class="number">200</span>) - <span class="number">6</span>) &lt; col(<span class="string">&quot;otherCol&quot;</span>)</span><br></pre></td></tr></table></figure>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// DataFrame 컬럼 접근 (printScheme() 아닌 프로그래밍 방식)</span></span><br><span class="line">spark.read.format(<span class="string">&quot;json&quot;</span>).load(<span class="string">&quot;/data/flight-data/json/2015-summary.json&quot;</span>).columns</span><br><span class="line"><span class="comment">// res0: Array[String] = Array(DEST_COUNTRY_NAME, ORIGIN_COUNTRY_NAME, count)</span></span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<blockquote>
+<p>‘표현식’ 과 ‘컬럼’ 사이 핵심 내용</p>
+<ul>
+<li>컬럼은 단지 표현식일 뿐</li>
+<li>컬럼과 컬럼의 트랜스포메이션은 파싱된 표현식과 동일한 논리적 실행 계획으로 컴파일</li>
+</ul>
+</blockquote>
+<h3 id="5-3-레코드와-로우"><a href="#5-3-레코드와-로우" class="headerlink" title="5.3 레코드와 로우"></a>5.3 레코드와 로우</h3><ul>
+<li>스파크의 ‘로우’ (=레코드)<ul>
+<li>스파크에서 DataFrame의 각 로우는 하나의 레코드</li>
+<li>값을 생성하기 위해 컬럼 표현식으로 Row 객체를 다룸</li>
+<li>Row 객체는 내부 바이트 배열을 가지는 인터페이스 =&gt; <strong>오직 컬럼 표현식으로만</strong> 다룰 수 있음 (외부 노출 X)<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Row 확인</span></span><br><span class="line">scala&gt; df.first()</span><br><span class="line"><span class="comment">// res1: org.apache.spark.sql.Row = [United States,Romania,15]</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li>로우 생성<ul>
+<li>각 컬럼에 해당하는 값으로 직접 Row 객체 생성 가능</li>
+<li>그러나 Row 객체는 스키마 정보 X (=&gt; 오직 DataFrame만 가짐)</li>
+<li>=&gt; 스키마랑 같은 순서로 값 명시해야함</li>
+</ul>
+</li>
+<li>로우 데이터 접근하려면 =&gt; 원하는 위치 지정<ul>
+<li>Python, R 은 올바른 데이터 타입으로 알아서 변환됨</li>
+<li>Scala, Java 는 헬퍼 메서드나 데이터타입 명시적 지정 필요 (Dataset API 사용 시 jvm 객체 데이터 셋 얻을 수 있음)<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.apache.spark.sql.<span class="type">Row</span></span><br><span class="line"><span class="keyword">val</span> myRow = <span class="type">Row</span>(<span class="string">&quot;Hello&quot;</span>, <span class="literal">null</span>, <span class="number">1</span>, <span class="literal">false</span>)</span><br><span class="line"></span><br><span class="line">myRow(<span class="number">0</span>) <span class="comment">// type Any</span></span><br><span class="line">myRow(<span class="number">0</span>).asInstanceOf[<span class="type">String</span>] <span class="comment">// String</span></span><br><span class="line">myRow.getString(<span class="number">0</span>) <span class="comment">// String</span></span><br><span class="line">myRow.getInt(<span class="number">2</span>) <span class="comment">// Int</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># python 사용 시</span></span><br><span class="line">myRow[<span class="number">0</span>]</span><br><span class="line">myRow[<span class="number">2</span>]</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-4-DataFrame의-트랜스포메이션"><a href="#5-4-DataFrame의-트랜스포메이션" class="headerlink" title="5.4 DataFrame의 트랜스포메이션"></a>5.4 DataFrame의 트랜스포메이션</h3><blockquote>
+<p>DataFrame을 다루는 방법 (주요 작업 4가지)</p>
+<ul>
+<li>로우나 컬럼 추가</li>
+<li>로우나 컬럼 제거</li>
+<li>로우를 컬럼으로 변환하거나, 그 반대로 변환</li>
+<li>컬럼값을 기준으로 로우 순서 변경</li>
+</ul>
+<p>모든 유형의 작업은 트랜스포메이션으로 변환 가능 (ex. 모든 로우의 특정 컬럼값 변경 후 결과 반환)</p>
+</blockquote>
+<h4 id="1-DataFrame-생성"><a href="#1-DataFrame-생성" class="headerlink" title="(1) DataFrame 생성"></a>(1) DataFrame 생성</h4><details><summary class="point-color-can-hover">[5.4-1] 예제 펼치기 </summary>
+
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// A. 원시 데이터 소스 -&gt; DataFrame</span></span><br><span class="line"><span class="keyword">val</span> df = (spark.read.format(<span class="string">&quot;json&quot;</span>).load(<span class="string">&quot;/data/flight-data/json/2015-summary.json&quot;</span>))</span><br><span class="line"><span class="comment">// (임시 뷰 등록)</span></span><br><span class="line">df.createOrReplaceTempView(<span class="string">&quot;dfTable&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// B. (Row 객체를 가지는) Seq 타입 -&gt; DataFrame</span></span><br><span class="line"><span class="keyword">import</span> org.apache.spark.sql.<span class="type">Row</span></span><br><span class="line"><span class="keyword">import</span> org.apache.spark.sql.types.&#123;<span class="type">StructField</span>, <span class="type">StructType</span>, <span class="type">StringType</span>, <span class="type">LongType</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> myManualSchema = <span class="keyword">new</span> <span class="type">StructType</span>(<span class="type">Array</span>(</span><br><span class="line">  <span class="keyword">new</span> <span class="type">StructField</span>(<span class="string">&quot;some&quot;</span>, <span class="type">StringType</span>, <span class="literal">true</span>),</span><br><span class="line">  <span class="keyword">new</span> <span class="type">StructField</span>(<span class="string">&quot;col&quot;</span>, <span class="type">StringType</span>, <span class="literal">true</span>),</span><br><span class="line">  <span class="keyword">new</span> <span class="type">StructField</span>(<span class="string">&quot;names&quot;</span>, <span class="type">LongType</span>, <span class="literal">false</span>)))</span><br><span class="line"><span class="keyword">val</span> myRows = <span class="type">Seq</span>(<span class="type">Row</span>(<span class="string">&quot;Hello&quot;</span>, <span class="literal">null</span>, <span class="number">1</span>L))</span><br><span class="line"><span class="keyword">val</span> myRDD = spark.sparkContext.parallelize(myRows)</span><br><span class="line"><span class="keyword">val</span> myDf = spark.createDataFrame(myRDD, myManualSchema)</span><br><span class="line">myDf.show()</span><br><span class="line"></span><br><span class="line"><span class="comment">// +-----+----+-----+</span></span><br><span class="line"><span class="comment">// | some| col|names|</span></span><br><span class="line"><span class="comment">// +-----+----+-----+</span></span><br><span class="line"><span class="comment">// |Hello|null|    1|</span></span><br><span class="line"><span class="comment">// +-----+----+-----+</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// Scala 사용 시 toDF() 사용 가능 (import spark.implicits._)</span></span><br><span class="line"><span class="keyword">val</span> myDF = <span class="type">Seq</span>((<span class="string">&quot;Hello&quot;</span>, <span class="number">2</span>, <span class="number">1</span>L)).toDF(<span class="string">&quot;col1&quot;</span>, <span class="string">&quot;col2&quot;</span>, <span class="string">&quot;col3&quot;</span>)</span><br></pre></td></tr></table></figure>
+</details>
+
+<h4 id="2-select-와-selectExpr"><a href="#2-select-와-selectExpr" class="headerlink" title="(2) select 와 selectExpr"></a>(2) select 와 selectExpr</h4><details><summary class="point-color-can-hover">[5.4-2] 예제 펼치기 </summary>
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--- SQL</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> dataFrameTable</span><br><span class="line"><span class="keyword">SELECT</span> columnName <span class="keyword">FROM</span> dataFrameTable</span><br><span class="line"><span class="keyword">SELECT</span> columnName <span class="operator">*</span> <span class="number">10</span>, otherColumn, someOtherCol <span class="keyword">as</span> c <span class="keyword">FROM</span> dataFrameTable</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># select() == SELECT query</span></span><br><span class="line">scala&gt; df.select(<span class="string">&quot;DEST_COUNTRY_NAME&quot;</span>).show(2)</span><br><span class="line">+-----------------+</span><br><span class="line">|DEST_COUNTRY_NAME|</span><br><span class="line">+-----------------+</span><br><span class="line">|    United States|</span><br><span class="line">|    United States|</span><br><span class="line">+-----------------+</span><br><span class="line"></span><br><span class="line">scala&gt; df.select(<span class="string">&quot;DEST_COUNTRY_NAME&quot;</span>, <span class="string">&quot;ORIGIN_COUNTRY_NAME&quot;</span>).show(2)</span><br><span class="line">+-----------------+-------------------+</span><br><span class="line">|DEST_COUNTRY_NAME|ORIGIN_COUNTRY_NAME|</span><br><span class="line">+-----------------+-------------------+</span><br><span class="line">|    United States|            Romania|</span><br><span class="line">|    United States|            Croatia|</span><br><span class="line">+-----------------+-------------------+</span><br><span class="line"></span><br><span class="line">--- SQL</span><br><span class="line">SELECT DEST_COUNTRY_NAME FROM dfTable LIMIT 2</span><br><span class="line">SELECT DEST_COUNTRY_NAME, ORIGIN_COUNTRY_NAME FROM dfTable LIMIT 2</span><br></pre></td></tr></table></figure>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 다양한 컬럼 참조 방법</span></span><br><span class="line"><span class="comment">// df.select(col(&quot;DEST_COUNTRY_NAME&quot;), &quot;DEST_COUNTRY_NAME&quot;) =&gt; 에러</span></span><br><span class="line"><span class="keyword">import</span> org.apache.spark.sql.functions.&#123;expr, col, column&#125;</span><br><span class="line">(df.select(</span><br><span class="line">    df.col(<span class="string">&quot;DEST_COUNTRY_NAME&quot;</span>),</span><br><span class="line">    col(<span class="string">&quot;DEST_COUNTRY_NAME&quot;</span>),</span><br><span class="line">    column(<span class="string">&quot;DEST_COUNTRY_NAME&quot;</span>),</span><br><span class="line">    <span class="symbol">&#x27;DEST_COUNTRY_NAME</span>,</span><br><span class="line">    $<span class="string">&quot;DEST_COUNTRY_NAME&quot;</span>,</span><br><span class="line">    expr(<span class="string">&quot;DEST_COUNTRY_NAME&quot;</span>))</span><br><span class="line">  .show(<span class="number">2</span>))</span><br><span class="line"><span class="comment">// +-----------------+-----------------+-----------------+-----------------+-----------------+-----------------+</span></span><br><span class="line"><span class="comment">// |DEST_COUNTRY_NAME|DEST_COUNTRY_NAME|DEST_COUNTRY_NAME|DEST_COUNTRY_NAME|DEST_COUNTRY_NAME|DEST_COUNTRY_NAME|</span></span><br><span class="line"><span class="comment">// +-----------------+-----------------+-----------------+-----------------+-----------------+-----------------+</span></span><br><span class="line"><span class="comment">// |    United States|    United States|    United States|    United States|    United States|    United States|</span></span><br><span class="line"><span class="comment">// |    United States|    United States|    United States|    United States|    United States|    United States|</span></span><br><span class="line"><span class="comment">// +-----------------+-----------------+-----------------+-----------------+-----------------+-----------------+</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// expr() 예시 - 컬럼명 DEST_COUNTRY_NAME -&gt; destination -&gt; DEST_COUNTRY_NAME</span></span><br><span class="line">df.select(expr(<span class="string">&quot;DEST_COUNTRY_NAME AS destination&quot;</span>)).show(<span class="number">2</span>)</span><br><span class="line">df.select(expr(<span class="string">&quot;DEST_COUNTRY_NAME as destination&quot;</span>).alias(<span class="string">&quot;DEST_COUNTRY_NAME&quot;</span>)).show(<span class="number">2</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// select() + expr() =&gt; selectExpr()</span></span><br><span class="line">df.selectExpr(<span class="string">&quot;DEST_COUNTRY_NAME as newColumnName&quot;</span>, <span class="string">&quot;DEST_COUNTRY_NAME&quot;</span>).show(<span class="number">2</span>)</span><br><span class="line"><span class="comment">// +-------------+-----------------+</span></span><br><span class="line"><span class="comment">// |newColumnName|DEST_COUNTRY_NAME|</span></span><br><span class="line"><span class="comment">// +-------------+-----------------+</span></span><br><span class="line"><span class="comment">// |United States|    United States|</span></span><br><span class="line"><span class="comment">// |United States|    United States|</span></span><br><span class="line"><span class="comment">// +-------------+-----------------+</span></span><br><span class="line"></span><br><span class="line">(df.selectExpr(</span><br><span class="line">    <span class="string">&quot;*&quot;</span>, <span class="comment">// include all original columns</span></span><br><span class="line">    <span class="string">&quot;(DEST_COUNTRY_NAME = ORIGIN_COUNTRY_NAME) as withinCountry&quot;</span>)</span><br><span class="line">  .show(<span class="number">2</span>))</span><br><span class="line"><span class="comment">// +-----------------+-------------------+-----+-------------+</span></span><br><span class="line"><span class="comment">// |DEST_COUNTRY_NAME|ORIGIN_COUNTRY_NAME|count|withinCountry|</span></span><br><span class="line"><span class="comment">// +-----------------+-------------------+-----+-------------+</span></span><br><span class="line"><span class="comment">// |    United States|            Romania|   15|        false|</span></span><br><span class="line"><span class="comment">// |    United States|            Croatia|    1|        false|</span></span><br><span class="line"><span class="comment">// +-----------------+-------------------+-----+-------------+</span></span><br><span class="line"></span><br><span class="line">df.selectExpr(<span class="string">&quot;avg(count)&quot;</span>, <span class="string">&quot;count(distinct(DEST_COUNTRY_NAME))&quot;</span>).show(<span class="number">2</span>)</span><br><span class="line"><span class="comment">// +-----------+---------------------------------+</span></span><br><span class="line"><span class="comment">// | avg(count)|count(DISTINCT DEST_COUNTRY_NAME)|</span></span><br><span class="line"><span class="comment">// +-----------+---------------------------------+</span></span><br><span class="line"><span class="comment">// |1770.765625|                              132|</span></span><br><span class="line"><span class="comment">// +-----------+---------------------------------+</span></span><br></pre></td></tr></table></figure>
+</details>
+
+
+<h4 id="3-스파크-데이터-타입으로-변환하기"><a href="#3-스파크-데이터-타입으로-변환하기" class="headerlink" title="(3) 스파크 데이터 타입으로 변환하기"></a>(3) 스파크 데이터 타입으로 변환하기</h4><details><summary class="point-color-can-hover">[5.4-3] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="4-컬럼-추가하기"><a href="#4-컬럼-추가하기" class="headerlink" title="(4) 컬럼 추가하기"></a>(4) 컬럼 추가하기</h4><details><summary class="point-color-can-hover">[5.4-4] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="5-컬럼명-변경하기"><a href="#5-컬럼명-변경하기" class="headerlink" title="(5) 컬럼명 변경하기"></a>(5) 컬럼명 변경하기</h4><details><summary class="point-color-can-hover">[5.4-5] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="6-예약-문자와-키워드"><a href="#6-예약-문자와-키워드" class="headerlink" title="(6) 예약 문자와 키워드"></a>(6) 예약 문자와 키워드</h4><details><summary class="point-color-can-hover">[5.4-6] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="7-대소문자-구분"><a href="#7-대소문자-구분" class="headerlink" title="(7) 대소문자 구분"></a>(7) 대소문자 구분</h4><details><summary class="point-color-can-hover">[5.4-7] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="8-컬럼-제거하기"><a href="#8-컬럼-제거하기" class="headerlink" title="(8) 컬럼 제거하기"></a>(8) 컬럼 제거하기</h4><details><summary class="point-color-can-hover">[5.4-8] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="9-컬럼의-데이터-타입-변경하기"><a href="#9-컬럼의-데이터-타입-변경하기" class="headerlink" title="(9) 컬럼의 데이터 타입 변경하기"></a>(9) 컬럼의 데이터 타입 변경하기</h4><details><summary class="point-color-can-hover">[5.4-9] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="10-로우-필터링하기"><a href="#10-로우-필터링하기" class="headerlink" title="(10) 로우 필터링하기"></a>(10) 로우 필터링하기</h4><details><summary class="point-color-can-hover">[5.4-10] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="11-고유한-로우-얻기"><a href="#11-고유한-로우-얻기" class="headerlink" title="(11) 고유한 로우 얻기"></a>(11) 고유한 로우 얻기</h4><details><summary class="point-color-can-hover">[5.4-11] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="12-무작위-샘플-만들기"><a href="#12-무작위-샘플-만들기" class="headerlink" title="(12) 무작위 샘플 만들기"></a>(12) 무작위 샘플 만들기</h4><details><summary class="point-color-can-hover">[5.4-12] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="13-임의-분할하기"><a href="#13-임의-분할하기" class="headerlink" title="(13) 임의 분할하기"></a>(13) 임의 분할하기</h4><details><summary class="point-color-can-hover">[5.4-13] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="14-로우-합치기와-추가하기"><a href="#14-로우-합치기와-추가하기" class="headerlink" title="(14) 로우 합치기와 추가하기"></a>(14) 로우 합치기와 추가하기</h4><details><summary class="point-color-can-hover">[5.4-14] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="15-로우-정렬하기"><a href="#15-로우-정렬하기" class="headerlink" title="(15) 로우 정렬하기"></a>(15) 로우 정렬하기</h4><details><summary class="point-color-can-hover">[5.4-15] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="16-로우-수-제한하기"><a href="#16-로우-수-제한하기" class="headerlink" title="(16) 로우 수 제한하기"></a>(16) 로우 수 제한하기</h4><details><summary class="point-color-can-hover">[5.4-16] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="17-repartition과-coalesce"><a href="#17-repartition과-coalesce" class="headerlink" title="(17) repartition과 coalesce"></a>(17) repartition과 coalesce</h4><details><summary class="point-color-can-hover">[5.4-17] 예제 펼치기 </summary>
+
+
+</details>
+
+<h4 id="18-드라이버로-로우-데이터-수집하기"><a href="#18-드라이버로-로우-데이터-수집하기" class="headerlink" title="(18) 드라이버로 로우 데이터 수집하기"></a>(18) 드라이버로 로우 데이터 수집하기</h4><details><summary class="point-color-can-hover">[5.4-18] 예제 펼치기 </summary>
+
+
+</details>
+
+
+<h3 id="5-5-정리"><a href="#5-5-정리" class="headerlink" title="5.5 정리"></a>5.5 정리</h3><ul>
+<li>DataFrame 기본 연산</li>
+<li>DataFrame 사용에 필요한 개념, 다양한 기능</li>
+</ul>
+<h3 id="📒-단어장"><a href="#📒-단어장" class="headerlink" title="📒 단어장"></a>📒 단어장</h3><ul>
+<li>비결정론적(nondeterministically) : = 매번 변하는</li>
+<li>ETL : <code>추출(Extract)</code> - <code>변환(Transform)</code> - <code>적재(Load)</code>  <i style="color:lightgray">(친숙하쥬?)</i></li>
+</ul>
+</div><p class="post-tags"><i class="fa fa-tags" aria-hidden="true"></i><a href="/tags/study/">#study</a><a href="/tags/book/">#book</a><a href="/tags/spark/">#spark</a><a href="/tags/apache/">#apache</a></p></article></div><footer><div class="paginator"><a class="next" href="/2021/01/26/Spark-The-Definitive-Guide-4%EC%9E%A5/">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'minsw-github-io';
+var disqus_identifier = '2021/01/26/Spark-The-Definitive-Guide-5장/';
+var disqus_title = '&amp;#039;Spark The Definitive Guide&amp;#039; 5장 - 구조적 API 기본 연산';
+var disqus_url = 'https://minsw.github.io/2021/01/26/Spark-The-Definitive-Guide-5장/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//#{theme.disqus}.disqus.com/count.js" async></script><div class="copyright"><p>© 2018 - 2021 <a href="https://minsw.github.io">Lukka Min</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-143001954-1",'auto');ga('send','pageview');</script><link rel="stylesheet" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css" media="screen" type="text/css"><script src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script><script>$(function(){$('.datatable').dataTable( {"order": [[ 0, "desc" ]],"iDisplayLength": -1,"lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]} );});</script></body></html>
