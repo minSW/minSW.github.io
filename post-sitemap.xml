@@ -9,8 +9,24 @@
 
 
     <url>
+        <loc>https://minsw.github.io/2021/02/03/Spark-The-Definitive-Guide-7%EC%9E%A5/</loc>
+        <lastmod>2021-02-04T08:51:49.250Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://minsw.github.io/2021/02/02/Spark-The-Definitive-Guide-6%EC%9E%A5/</loc>
+        <lastmod>2021-02-04T08:51:07.361Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://minsw.github.io/2021/01/26/Spark-The-Definitive-Guide-5%EC%9E%A5/</loc>
-        <lastmod>2021-01-30T08:29:58.843Z</lastmod>
+        <lastmod>2021-02-03T18:48:55.633Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
