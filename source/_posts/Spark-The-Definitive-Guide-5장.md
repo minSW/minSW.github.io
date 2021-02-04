@@ -860,6 +860,39 @@ df.repartition(5, col("DEST_COUNTRY_NAME")).coalesce(2)
 
 <details><summary class="point-color-can-hover">[5.4-18] 예제 펼치기 </summary>
 
+```scala
+val collectDF = df.limit(10)
+collectDF.take(5) // take() 는 정수형 값을 인수로 사용
+collectDF.show() // show() => 결과를 정돈된 형태로 출력
+// +-----------------+-------------------+-----+
+// |DEST_COUNTRY_NAME|ORIGIN_COUNTRY_NAME|count|
+// +-----------------+-------------------+-----+
+// |    United States|            Romania|   15|
+// |    United States|            Croatia|    1|
+// |    United States|            Ireland|  344|
+// |            Egypt|      United States|   15|
+// |    United States|              India|   62|
+// |    United States|          Singapore|    1|
+// |    United States|            Grenada|   62|
+// |       Costa Rica|      United States|  588|
+// |          Senegal|      United States|   40|
+// |          Moldova|      United States|    1|
+// +-----------------+-------------------+-----+
+
+
+collectDF.show(5, false)
+// +-----------------+-------------------+-----+
+// |DEST_COUNTRY_NAME|ORIGIN_COUNTRY_NAME|count|
+// +-----------------+-------------------+-----+
+// |United States    |Romania            |15   |
+// |United States    |Croatia            |1    |
+// |United States    |Ireland            |344  |
+// |Egypt            |United States      |15   |
+// |United States    |India              |62   |
+// +-----------------+-------------------+-----+
+
+collectDF.collect()
+```
 
 </details>
 
