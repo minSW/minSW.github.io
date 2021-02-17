@@ -1,0 +1,367 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> &#039;Spark The Definitive Guide&#039; 9장 - 쏘쓰는 역시 데이터소스 · Look out</title><meta name="description" content="&amp;#039;Spark The Definitive Guide&amp;#039; 9장 - 쏘쓰는 역시 데이터소스 - Lukka Min"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/cover.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link rel="search" type="application/opensearchdescription+xml" href="https://minsw.github.io/atom.xml" title="Look out"><script src="//code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script><meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Look out" type="application/atom+xml">
+</head><body><div class="wrap"><header><a class="logo-link" href="/"><img src="/cover.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a class="nav-list-link" href="/" target="_self">BLOG</a></li><li class="nav-list-item"><a class="nav-list-link" href="/archives/" target="_self">ARCHIVE</a></li><li class="nav-list-item"><a class="nav-list-link" href="/tags/" target="_self">TAG</a></li><li class="nav-list-item"><a class="nav-list-link" href="https://github.com/minSW" target="_blank">GITHUB</a></li></ul></header><main class="container"></main><div class="post"><article class="post-block"><h1 class="post-title">&#039;Spark The Definitive Guide&#039; 9장 - 쏘쓰는 역시 데이터소스</h1><div class="post-info">2021년 2월 16일<span class="categories"><i class="fa fa-bookmark" aria-hidden="true"></i></span><a class="post-category" href="/categories/spark/">#spark</a></div><div class="post-content"><br/>
+
+<img src="https://user-images.githubusercontent.com/26691216/108165351-c8bd8100-7135-11eb-9cbe-6ccfa0e63155.gif" width=400/>
+
+<center><h2>_ _ _</h2></center>
+
+<br/>
+
+<hr>
+<h1 id="CHAPTER-9-데이터소스"><a href="#CHAPTER-9-데이터소스" class="headerlink" title="CHAPTER 9 데이터소스"></a>CHAPTER 9 데이터소스</h1><p>스파크 기본 6가지 ‘핵심’ 데이터 소스 + 커뮤니티에서 만든 외부 데이터소스 소개</p>
+<p>핵심데이터 소스를 통해 데이터를 읽고 쓰는 방법을 터득하고<br>서드파티 데이터소스와 스파크 연동 시 고려해야할 점을 배우는 것이 목표</p>
+<h4 id="스파크의-핵심-데이터-소스"><a href="#스파크의-핵심-데이터-소스" class="headerlink" title="스파크의 핵심 데이터 소스"></a>스파크의 핵심 데이터 소스</h4><ul>
+<li>CSV</li>
+<li>JSON</li>
+<li>파케이(Parquet)</li>
+<li>ORC</li>
+<li>JDBC/ODBC 연결</li>
+<li>일반 텍스트 파일</li>
+</ul>
+<h4 id="커뮤니티에서-만든-데이터소스"><a href="#커뮤니티에서-만든-데이터소스" class="headerlink" title="커뮤니티에서 만든 데이터소스"></a>커뮤니티에서 만든 데이터소스</h4><ul>
+<li><a target="_blank" rel="noopener" href="http://bit.ly/2DSafT8">카산드라</a></li>
+<li><a target="_blank" rel="noopener" href="http://bit.ly/2FkKN5A">HBase</a></li>
+<li><a target="_blank" rel="noopener" href="http://bit.ly/2BwA7yq">몽고DB</a></li>
+<li><a target="_blank" rel="noopener" href="http://bit.ly/2GlMsJE">AWS Redshift</a></li>
+<li><a target="_blank" rel="noopener" href="http://bit.ly/2GitGCK">XML</a></li>
+<li>기타 수많은 데이터 소스</li>
+</ul>
+<h3 id="9-1-데이터소스-API의-구조"><a href="#9-1-데이터소스-API의-구조" class="headerlink" title="9.1 데이터소스 API의 구조"></a>9.1 데이터소스 API의 구조</h3><ul>
+<li><p>데이터 소스 API 전체 구조부터 이해하기</p>
+</li>
+<li><p><strong><em>읽기 API</em></strong> 구조</p>
+<ul>
+<li>핵심 구조 (모든 데이터 소스를 읽을 때 해당 형식 사용)  <i style="color:lightgray">// 요약 표기법도 존재</i><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">DataFrameReader</span>.format(...).option(<span class="string">&quot;key&quot;</span>, <span class="string">&quot;value&quot;</span>).schema(...).load()</span><br></pre></td></tr></table></figure></li>
+<li><code>format()</code> : 포맷 설정은 Optional (default - Parquet 포멧)</li>
+<li><code>option()</code> : 데이터 읽는 방법에 대한 파라미터 키-값 쌍으로 설정</li>
+<li><code>schema()</code> : 데이터 소스에서 스키마를 제공하거나 추론 기능 사용 시. Optional</li>
+</ul>
+</li>
+<li><p>데이터 읽기의 기초</p>
+<ul>
+<li><code>DataFrameReader</code> : 스파크에서 데이터를 읽을 때 기본적으로 사용<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// DataFrameReader은 SparkSession의 read 속성으로 접근</span></span><br><span class="line">spark.read</span><br></pre></td></tr></table></figure></li>
+<li>DataFrameReader에 지정해야하는 값<ul>
+<li>포맷</li>
+<li>스키마</li>
+<li>읽기 모드 (필수, default 값 존재)</li>
+<li>옵션</li>
+<li>(+ <strong>데이터 읽을 경로</strong> 필수 지정)</li>
+</ul>
+</li>
+<li><strong>읽기 모드</strong> : 스파크가 형식에 맞지않는 데이터를 만났을 때 동작 방식 지정하는 옵션<ul>
+<li>반정형 데이터소스 다룰 시 많이 발생</li>
+</ul>
+</li>
+<li>스파크의 읽기 모드 종류<ul>
+<li><code>permissive</code> (default): 오류 레코드 모든 필드를 null로 지정하고 오류 레코드를 _corrupt_record (문자열 컬럼) 에 기록</li>
+<li><code>dropMalformed</code> : 형식에 맞지않는 레코드가 포함된 로우 제거</li>
+<li><code>failFast</code> : 형식에 맞지않는 레코드 만날 시 즉시 종료<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 읽기 코드 구성 예제</span></span><br><span class="line">spark.read.format(<span class="string">&quot;csv&quot;</span>)</span><br><span class="line">  .option(<span class="string">&quot;mode&quot;</span>, <span class="string">&quot;FAILFAST&quot;</span>)</span><br><span class="line">  .option(<span class="string">&quot;inferSchema&quot;</span>, <span class="string">&quot;true&quot;</span>)</span><br><span class="line">  .option(<span class="string">&quot;path&quot;</span>, <span class="string">&quot;path/to/file(s)&quot;</span>)</span><br><span class="line">  .schema(someSchema)</span><br><span class="line">  .load()</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong><em>쓰기 API</em></strong> 구조</p>
+<ul>
+<li>핵심 구조 (모든 데이터 소스를 읽을 때 해당 형식 사용)<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">DataFrameWriter</span>.format(...).option(...).partitionBy(...).bucketBy(...).sortBy(...).save()</span><br></pre></td></tr></table></figure></li>
+<li><code>format()</code> : 포맷 설정은 Optional (default - Parquet 포멧)</li>
+<li><code>option()</code> : 데이터 쓰기 방법 설정</li>
+<li><code>partitionBy()</code>, <code>bucketBy()</code>, <code>sortBy()</code> : 최종 파일 배치 형태(layout) 제어 가능. 파일기반 데이터소스에만 동작</li>
+</ul>
+</li>
+<li><p>데이터 쓰기의 기초</p>
+<ul>
+<li><p>데이터 읽기와 매우 유사. Reader대신 Writer 사용</p>
+</li>
+<li><p><code>DataFrameWriter</code> : 데이터 소스에 항상 데이터를 기록해야하고, DataFrame 별로 DataFramewriter에 접근해야함</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// DataFrame 의 write 속성을 이용해서 DataFrameWriter에 접근</span></span><br><span class="line">dataFrame.write</span><br></pre></td></tr></table></figure></li>
+<li><p>DataFrameWriter에 지정해야하는 값</p>
+<ul>
+<li>포맷</li>
+<li>옵션</li>
+<li>저장 모드</li>
+<li>(+ <strong>데이터 저장 경로</strong> 필수 지정)</li>
+</ul>
+</li>
+<li><p><strong>저장 모드</strong> : 스파크가 지정된 위치에서 동일한 파일을 발견했을 때 동작 방식 지정하는 옵션</p>
+</li>
+<li><p>스파크의 저장 모드 종류</p>
+<ul>
+<li><code>append</code> : 해당 경로에 이미 존재하는 파일 목록에 결과 파일 추가</li>
+<li><code>overwrite</code> : 이미 존재하는 모든 데이터 덮어쓰기</li>
+<li><code>errorIfExists</code> (default) : 해당 경로에 데이터나 파일이 존재하면 오류 발생 및 쓰기 작업 실패</li>
+<li><code>ignore</code> : 아무런 처리 안함</li>
+</ul>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 쓰기 코드 구성 예제</span></span><br><span class="line">spark.write.format(<span class="string">&quot;csv&quot;</span>)</span><br><span class="line">  .option(<span class="string">&quot;mode&quot;</span>, <span class="string">&quot;OVERWRITE&quot;</span>)</span><br><span class="line">  .option(<span class="string">&quot;dateFormat&quot;</span>, <span class="string">&quot;yyyy-MM-dd&quot;</span>)</span><br><span class="line">  .option(<span class="string">&quot;path&quot;</span>, <span class="string">&quot;path/to/file(s)&quot;</span>)</span><br><span class="line">  .save()</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="9-2-CSV-파일"><a href="#9-2-CSV-파일" class="headerlink" title="9.2 CSV 파일"></a>9.2 CSV 파일</h3><ul>
+<li>CSV(comma-separated values) : <code>,</code> 로 구분된 값<ul>
+<li>각 줄이 단일 레코드, 레코드의 각 필드는 콤마로 구분하는 텍스트 파일 포멧</li>
+<li>구조적인 것 같아도 개 까다로운 포맷 (다양한 전제 생성 가능…)</li>
+<li>=&gt; 따라서 CSV Reader 가 <strong>많은 옵션</strong> 제공 </li>
+</ul>
+</li>
+<li>옵션<ul>
+<li>CSV Reader, Writer 많은 옵션 제공 (<code>p.250-251 [표 9-3]</code> 참고)</li>
+<li>maxColumns, inferSchema 등 쓰기에서는 적용되지 않는 옵션 빼고는 <strong>읽기와 쓰기는 동일한 옵션</strong> 제공</li>
+</ul>
+</li>
+<li>CSV 파일 읽기<ul>
+<li>예제 참고</li>
+<li>데이터가 기대한 데이터 포맷이 아닌경우?<ul>
+<li><strong>실제</strong> 스키마와는 일치하지 않지만 스파크는 문제 인지 X</li>
+<li>스파크가 실제로 데이터를 읽어 들이는 시점에 문제 발생 (스파크 잡 즉시 종료)</li>
+<li>즉, 정의하는 시점에는 문제 X. 잡 실행 시점에만 오류 발생  =&gt; <u>스파크의 <strong>지연 연산</strong> 특성</u></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>CSV 파일 쓰기<ul>
+<li>예제 참고</li>
+</ul>
+</li>
+</ul>
+<h3 id="9-3-JSON-파일"><a href="#9-3-JSON-파일" class="headerlink" title="9.3 JSON 파일"></a>9.3 JSON 파일</h3><ul>
+<li>JSON(JavaScript Object Notation)<ul>
+<li>스파크는 <strong>줄로 구분된 JSON</strong> 을 기본적으로 사용<ul>
+<li>multiLine 옵션으로 줄로 구분 vs 여러 줄로 구성된 방식 선택 가능</li>
+<li><code>true</code> 로 설정 시 =&gt; 전체 파일을 하나의 JSON 파일로 읽기 가능</li>
+</ul>
+</li>
+<li>그래도 줄로 구분된 JSON을 추천하는 이유?<ul>
+<li>전체 파일을 읽어서 저장하는 방식이 아니므로 =&gt; 새로운 레코드 추가 가능 (안정적)</li>
+<li>구조화되어 있고, 최소한의 기본 데이터 타입이 존재 =&gt; 적합한 데이터타입 추정 가능</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>옵션<ul>
+<li>JSON은 객체. CSV(텍스트) 보다 옵션수 적음 (<code>p.255-256 [표 9-4]</code> 참고)</li>
+</ul>
+</li>
+<li>JSON 파일 읽기<ul>
+<li>예제 참고</li>
+</ul>
+</li>
+<li>JSON 파일 쓰기<ul>
+<li>예제 참고</li>
+<li>데이터소스와 관계없이 JSON 파일로 저장 가능<ul>
+<li>ex. CSV DataFrame =&gt; JSON 파일</li>
+<li>이전의 규칙을 그대로 따른다? (예제이야기인지?)</li>
+<li>파티션당 하나의 파일을 만들고, 전체 DataFrame을 단일 폴더에 저장. JSON 객체는 한줄에 하나씩 기록.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="9-4-파케이-파일"><a href="#9-4-파케이-파일" class="headerlink" title="9.4 파케이 파일"></a>9.4 파케이 파일</h3><ul>
+<li>파케이(Parquet) : 다양한 스토리지 최적화 기술을 제공하는 오픈소스로 만들어진 <strong>컬럼 기반의 데이터 저장 방식</strong><ul>
+<li>분석 워크로드에 최적화</li>
+<li>저장소 공간 절약</li>
+<li>전체 파일 읽기 대신 개별 컬럼 읽기 가능</li>
+<li>컬럼 기반의 압축 기능 제공</li>
+<li>아파치 스파크와 특히 호환 good =&gt; 그래서 <strong>스파크 기본 파일 포멧</strong></li>
+<li>복합 데이터 타입 지원 (CSV는 배열 사용 X)</li>
+</ul>
+</li>
+<li>읽기 연산이 CSV, JSON보다 훨씬 효율적 =&gt; 장기저장용 데이터는 파케이 권장<ul>
+<li><a style="color:lightgray">걍 파케이가 짱짱맨이란 소리다</a></li>
+</ul>
+</li>
+<li>옵션<ul>
+<li>파케이는 옵션이 거의 없음. 단 2개  (<code>p.259 [표 9-5]</code> 참고)<ul>
+<li>2개만 존재하는 이유는.. 그냥 모범생 포맷이기때문… (자체 스키마 사용해서 데이터 저장)</li>
+<li>그러나 ‘호환되지 않는 파케이 파일’ 주의 =&gt; 트기 <u>다른 버전(구버전)의 스파크 사용 시 파케이 저장</u> 에 주의</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>파케이 파일 읽기<ul>
+<li>예제 참고</li>
+<li>포맷 설정만으로 충분<ul>
+<li>DataFrame 표현을 위해 정확한 스키마가 필요할 때만 스키마 지정 </li>
+<li>그렇지만 사실 거의 필요 X</li>
+</ul>
+</li>
+<li>파케이 파일은 스키마가 파일 자체에 내장되어 추론 필요 X<ul>
+<li>읽는 시점에 스키마를 알 수 있다 (Schema-on-read)</li>
+<li>CSV 파일 inferSchema랑 비슷</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>파케이 파일 쓰기<ul>
+<li>예제 참고</li>
+<li>“읽기만큼 쉽다” =&gt; 파일의 경로만 명시하면 됨<ul>
+<li>분할 규칙은 다른 포맷과 동일하게 적용</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="9-5-ORC-파일"><a href="#9-5-ORC-파일" class="headerlink" title="9.5 ORC 파일"></a>9.5 ORC 파일</h3><ul>
+<li>ORC(Optimized Row Columnar) : 하둡 워크로드를 위해 설계된 자기 기술적(self-describing)이며 데이터 타입을 인식할 수 있는 <strong>컬럼 기반의 파일 포맷</strong><ul>
+<li>대규모 스트리밍 읽기에 최적화</li>
+<li>필요한 로우를 신속하게 찾을 수 있는 기능 통합</li>
+<li>스파크에서 별도 옵션 지정 없이 데이터 읽기 가능</li>
+</ul>
+</li>
+<li>ORC vs Parquet<ul>
+<li>매우 유사하지만, 차이는 Parquet은 Spark에, ORC는 Hive에 최적화되어있음</li>
+<li>ORC는 옵션은 따로 없는 듯?</li>
+</ul>
+</li>
+<li>ORC 파일 읽기<ul>
+<li>예제 참고</li>
+</ul>
+</li>
+<li>ORC 파일 쓰기<ul>
+<li>예제 참고</li>
+</ul>
+</li>
+</ul>
+<h3 id="9-6-SQL-데이터베이스"><a href="#9-6-SQL-데이터베이스" class="headerlink" title="9.6 SQL 데이터베이스"></a>9.6 SQL 데이터베이스</h3><blockquote>
+<p>예제 추가하면서 내용 보충 예정</p>
+</blockquote>
+<ul>
+<li>SQLite 샘플로 예제 (DB 설정과정 생략) _ 분산환경에서 사용해서는 X</li>
+<li>JDBC 데이터소스 옵션 (<code>p.262-263 [표 9-6]</code> 참고)</li>
+<li>SQL 데이터베이스 읽기</li>
+<li>쿼리 푸시다운<ul>
+<li>데이터베이스 병렬로 읽기</li>
+<li>슬라이딩 윈도우 기반의 파티셔닝</li>
+</ul>
+</li>
+<li>SQL 데이터베이스 쓰기</li>
+</ul>
+<h3 id="9-7-텍스트-파일"><a href="#9-7-텍스트-파일" class="headerlink" title="9.7 텍스트 파일"></a>9.7 텍스트 파일</h3><ul>
+<li>일반 텍스트 파일(plain-text file) 도 읽기 가능<ul>
+<li>각 줄이 DataFrame의 레코드</li>
+<li>변환은 마음대로 가능 (ex. 아파치 로그 파일 → 구조화된 포멧으로 파싱, 자연어 처리를 위한 일반 텍스트 파싱)</li>
+<li>기본 데이터 타입의 유연성 활용 가능 =&gt; Dataset API 활용 👍🏻</li>
+</ul>
+</li>
+<li>텍스트 파일 읽기<ul>
+<li>예제 참고</li>
+<li><code>textFile(텍스트 파일)</code> 사용</li>
+<li><code>text()</code> : 파티션된 텍스트 파일을 읽고 쓸 경우 파티션 수행 결과로 생성된 디렉토리를 인식할 수 있음 (<code>textFile()</code>은 무시)</li>
+</ul>
+</li>
+<li>텍스트 파일 쓰기<ul>
+<li>예제 참고</li>
+<li><strong>문자열 컬럼이 하나만 존재</strong>해야함 (아닐 경우 실패)</li>
+<li>파티셔닝 작업 수행 시 더 많은 컬럼 저장 가능<ul>
+<li>단 모든 파일에 컬럼 추가 아님</li>
+<li>텍스트 파일이 저장되는 디렉토리에 폴더별로 컬럼 저장</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="9-8-고급-I-O-개념"><a href="#9-8-고급-I-O-개념" class="headerlink" title="9.8 고급 I/O 개념"></a>9.8 고급 I/O 개념</h3><ul>
+<li>고급 I/O<ul>
+<li>쓰기 작업 전 파티션 수를 조절 =&gt; 병렬 처리 파일 수 제어 가능</li>
+<li><strong>버케팅</strong> &amp; <strong>파티셔닝</strong> =&gt; 데이터 저장 구조 제어 가능</li>
+</ul>
+</li>
+<li>분할 가능한 파일 타입과 압축 방식<ul>
+<li>특정 파일 포맷은 기본적으로 분할 지원<ul>
+<li>=&gt; 스파크가 전체 파일이 아닌 쿼리에 필요한 부분만 읽음</li>
+<li>=&gt; 성능 향상</li>
+</ul>
+</li>
+<li>하둡 분산 파일 시스템 (HDFS) 같은 시스템 : 분할된 파일을 여러 블록으로 나누어 분산 최적화<ul>
+<li>=&gt; 더 좋고요~ 최적화 ↑</li>
+</ul>
+</li>
+<li>압축 방식 : 모든 압축 방식이 분할 압축을 지원하지는 X<ul>
+<li>데이터 저장 방식이 스파크 잡의 원활한 동작에 영향이 큼</li>
+<li>=&gt; <strong>파케이 파일포맷 + GZIP 압축방식</strong> 추천</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>병렬로 데이터 읽기<ul>
+<li>여러 익스큐터가 동시에 같은 파일 읽기는 불가능. 여러 파일 읽기는 가능!</li>
+<li>ex. 다수 파일이 존재하는 폴더를 읽는 상황<ul>
+<li>폴더의 개별 파일 = DataFrame의 파티션</li>
+<li>=&gt; 사용 가능한 익스큐터를 이용해서 병렬로 파일 읽기 O</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>병렬로 데이터 쓰기<ul>
+<li>파일과 데이터 수? =&gt; 데이터를 쓰는 시점의 DataFrame 파티션 수에 따라 달라질 수 있음</li>
+<li>기본적으론 파티션 당 하나의 파일</li>
+<li>옵션에 지정하는 파일명은 실제론 다수의 파일을 가진 <strong>디렉토리</strong><ul>
+<li>해당 디렉토리 안에 파티션 당 하나의 파일로 데이터 저장 (1:1)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="파티셔닝-amp-버케팅"><a href="#파티셔닝-amp-버케팅" class="headerlink" title="파티셔닝 &amp; 버케팅"></a>파티셔닝 &amp; 버케팅</h4><ul>
+<li><p><strong>파티셔닝(partitioning)</strong> : 어떤 데이터를 어디에 저장할 것인지 제어</p>
+<ul>
+<li>파티셔닝된 디렉토리 or 테이블에 파일을 쓸 때, 디렉토리 별로 컬럼 데이터를 인코딩해서 저장</li>
+<li>즉, 데이터 읽기 시 전체 데이터 스캔 없이 <strong>필요한 컬럼 데이터만 읽기</strong> 가능</li>
+<li>특징<ul>
+<li>모든 파일 기반 데이터소스에서 지원</li>
+<li>필터링 자주 사용하는 테이블 사용 시 =&gt; 가장 손쉬운 최적화 (읽기 속도 ↑)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>버케팅(bucketing)</strong> : 각 파일에 저장된 데이터를 제어할 수 있는 또 다른 파일 조직화 기법</p>
+<ul>
+<li>스파크 관리 테이블에서만 사용 가능</li>
+<li>동일한 버킷 ID 가진 데이터는 동일한 물리적 파티션에 존재</li>
+<li>즉, 데이터가 이후 사용 방식에 맞춰 사전에 파티셔닝. 조인이나 집계 시의 <strong>고비용 셔플 회피</strong> 가능</li>
+<li>ex. 특정 컬럼을 파티셔닝해서 수억개 디렉토리 생성되면 =&gt; ‘버켓’ 단위로 데이터를 모아 일정 수 파일로 저장</li>
+<li>버켓팅 파일 기본 경로 : <code>/user/hive/warehouse/</code></li>
+</ul>
+</li>
+<li><p>더 자세한 내용은 <a target="_blank" rel="noopener" href="https://bit.ly/2NJQfa2">스파크 서밋 2017</a> 참고</p>
+</li>
+<li><p>복합 데이터 유형 쓰기</p>
+<ul>
+<li>스파크의 자체 데이터 타입(<a href="https://minsw.github.io/2021/02/02/Spark-The-Definitive-Guide-6%EC%9E%A5/">6장</a> 참고)은 스파크에서는 잘 동작하지만, 모든 데이터 파일 포맷에 적합하지는 X</li>
+<li>ex. CSV 파일은 복합 데이터 타입 미지원</li>
+</ul>
+</li>
+<li><p>파일 크기 관리</p>
+<ul>
+<li>데이터 저장시에는 문제 없음. <strong>읽을 때는 파일 크기는 중요 요소</strong></li>
+<li>작은 파일 多 =&gt; 메타데이터에 관리 부하 ↑↑<ul>
+<li><code>작은 크기의 파일 문제</code> : 스파크, HDFS 등 많은 파일 시스템은 작은 크기 파일 잘 못 다룸</li>
+</ul>
+</li>
+<li>그럼 큰 파일은 좋은가? =&gt; X<ul>
+<li>몇개의 로우가 필요해도 전체 데이터 블록을 읽음. 비효율</li>
+<li>뭐든 ‘적당’한게 베스트</li>
+</ul>
+</li>
+<li><code>maxRecordsPerFile</code> : 파일당 레코드 수 지정 옵션<ul>
+<li><strong>자동으로 파일 크기를 제어</strong>할 수 있는 새로운 방법 (since 2.2)</li>
+<li>결과 파일 수 = 파일 쓰는 시점의 파티션 수 (파티셔닝 컬럼) 로 결정</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="9-9-정리"><a href="#9-9-정리" class="headerlink" title="9.9 정리"></a>9.9 정리</h3><ul>
+<li>스파크에서 데이터를 읽고/쓸 때 사용할 수 있는 옵션</li>
+<li>사용자 정의 데이터 소스 구현하는 방법은 개선 진행 중이므로 스킵. 궁금하다면 모범사례 참고 (<a target="_blank" rel="noopener" href="https://github.com/datastax/spark-cassandra-connector">spark-cassandra-connector</a>) </li>
+</ul>
+<h3 id="📒-단어장"><a href="#📒-단어장" class="headerlink" title="📒 단어장"></a>📒 단어장</h3></div><p class="post-tags"><i class="fa fa-tags" aria-hidden="true"></i><a href="/tags/study/">#study</a><a href="/tags/book/">#book</a><a href="/tags/spark/">#spark</a><a href="/tags/apache/">#apache</a></p></article></div><footer><div class="paginator"><a class="next" href="/2021/02/15/Spark-The-Definitive-Guide-8%EC%9E%A5/">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'minsw-github-io';
+var disqus_identifier = '2021/02/16/Spark-The-Definitive-Guide-9장/';
+var disqus_title = '&amp;#039;Spark The Definitive Guide&amp;#039; 9장 - 쏘쓰는 역시 데이터소스';
+var disqus_url = 'https://minsw.github.io/2021/02/16/Spark-The-Definitive-Guide-9장/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//#{theme.disqus}.disqus.com/count.js" async></script><div class="copyright"><p>© 2018 - 2021 <a href="https://minsw.github.io">Lukka Min</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-143001954-1",'auto');ga('send','pageview');</script><link rel="stylesheet" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css" media="screen" type="text/css"><script src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script><script>$(function(){$('.datatable').dataTable( {"order": [[ 0, "desc" ]],"iDisplayLength": -1,"lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]} );});</script></body></html>
