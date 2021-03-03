@@ -1,0 +1,225 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> &#039;Spark The Definitive Guide&#039; 11장 - 셋뚜셋뚜 데이터셋뚜 (PART 2 끝) · Look out</title><meta name="description" content="&amp;#039;Spark The Definitive Guide&amp;#039; 11장 - 셋뚜셋뚜 데이터셋뚜 (PART 2 끝) - Lukka Min"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/cover.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link rel="search" type="application/opensearchdescription+xml" href="https://minsw.github.io/atom.xml" title="Look out"><script src="//code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script><meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Look out" type="application/atom+xml">
+</head><body><div class="wrap"><header><a class="logo-link" href="/"><img src="/cover.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a class="nav-list-link" href="/" target="_self">BLOG</a></li><li class="nav-list-item"><a class="nav-list-link" href="/archives/" target="_self">ARCHIVE</a></li><li class="nav-list-item"><a class="nav-list-link" href="/tags/" target="_self">TAG</a></li><li class="nav-list-item"><a class="nav-list-link" href="https://github.com/minSW" target="_blank">GITHUB</a></li></ul></header><main class="container"></main><div class="post"><article class="post-block"><h1 class="post-title">&#039;Spark The Definitive Guide&#039; 11장 - 셋뚜셋뚜 데이터셋뚜 (PART 2 끝)</h1><div class="post-info">2021년 3월 1일<span class="categories"><i class="fa fa-bookmark" aria-hidden="true"></i></span><a class="post-category" href="/categories/spark/">#spark</a></div><div class="post-content"><br/>
+
+<h4 id="Part-2-END"><a href="#Part-2-END" class="headerlink" title="[Part 2] END"></a>[Part 2] END</h4><p>드디어 길고 길었던 <a href="https://minsw.github.io/2021/01/26/Spark-The-Definitive-Guide-4%EC%9E%A5/">구조적 API</a> 파트 끝 🎉<br>예제가 많아서 계속 차근차근 따라가면서 읽다보니 한 챕터 당 소요시간이 훨씬 길었다.. 후…</p>
+<p>남은 파트들은 템포가 좀 짧았으면 좋겠다 (´；ω；`)</p>
+<p style="color:lightgray"><i>(해치웠나..?)</i></p>
+
+<br/>
+
+<img src="https://user-images.githubusercontent.com/26691216/109769822-1362f100-7c3e-11eb-9f22-9a1d3be261dd.png" width=400/>
+<center>쎘뚜쎘뚜~ 데이터프레임이랑 셋뚜~</center>
+
+
+<center><h2>_ _ _</h2></center>
+
+<br/>
+
+<hr>
+<h1 id="CHAPTER-11-Dataset"><a href="#CHAPTER-11-Dataset" class="headerlink" title="CHAPTER 11 Dataset"></a>CHAPTER 11 Dataset</h1><p>Dataset은 구조적 API의 기본 데이터 타입 (DataFrame = Row 타입의 Dataset <code>Dataset[Row]</code>)<br>스팤잘알들은 ‘타입형 API’ 라고 부르기도 한다</p>
+<ul>
+<li>Dataset은 JVM 사용하는 Scala, Java에서만 사용 가능 (DataFrame은 다양한 언어 사용 가능)<ul>
+<li>Scala는 스키마가 정의된 케이스 클래스 객체로 정의</li>
+<li>Java는 자바 빈 객체로 정의</li>
+</ul>
+</li>
+</ul>
+<h4 id="인코더-encoder"><a href="#인코더-encoder" class="headerlink" title="인코더 (encoder) ?"></a>인코더 (encoder) ?</h4><ul>
+<li>인코더 : 도메인별 특정 객체 T → 스파크의 내부 데이터 타입으로 매핑하는 시스템 <ul>
+<li>인코더가 스파크에게 지시 (런타임 환경) : 객체 (클래스)  → 바이너리 구조로 직렬화 코드 생성 </li>
+<li>DataFrame 이나 ‘표준’ 구조적 API 사용 시 :  Row 타입 → 바이너리 구조로 변환</li>
+</ul>
+</li>
+<li>도메인에 특화된 객체를 만들어 사용하려면 <U><strong>사용자 정의 데이터 타입</strong></U> 정의 필요<ul>
+<li>Scala의 <code>case class</code>, Java의 <code>JavaBean</code> 형태로</li>
+<li>스파크는 Row 타입 대신 사용자 정의 데이터 타입을 분산 방식으로 다루기 가능</li>
+</ul>
+</li>
+<li>Dataset API 사용 시<ul>
+<li>스파크가 데이터셋에 접근할 때마다 사용자 정의 데이터 타입으로 변환 (Row 포맷 X)</li>
+<li>=&gt; <strong>느리다 (성능 ↓)</strong> / 대신 더 많은 유연성</li>
+<li>사용자 정의 함수 (Python) 이랑 비슷?<ul>
+<li>사용자 정의 데이터 타입 &gt;&gt;&gt;&gt;&gt;&gt; 사용자 정의 함수 (언어 전환이 훨씬 느림)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<br/>
+
+<h3 id="11-1-Dataset을-사용할-시기"><a href="#11-1-Dataset을-사용할-시기" class="headerlink" title="11.1 Dataset을 사용할 시기"></a>11.1 Dataset을 사용할 시기</h3><blockquote>
+<p><del><em>“그럼 Dataset 성능 구린데 왜 쓰나?”</em></del></p>
+<p><strong>Dataset을 사용해야하는 2가지 이유</strong></p>
+<ol>
+<li>DataFrmae 기능만으로는 수행할 연산을 표현할 수 없는 경우</li>
+<li>성능 저하를 감수하더라도, 타입 안정성(type-safe)를 가진 데이터 타입을 사용하고 싶은 경우</li>
+</ol>
+</blockquote>
+<ul>
+<li>(1) 구조적 API로 표현할 수 없는 작업들<ul>
+<li>ex. 복잡한 비즈니스로직을 단일 함수(SQL X, DataFrame X) 로 인코딩해야하는 경우</li>
+</ul>
+</li>
+<li>(2) 타입 안정성 (정확도↑, 방어적 코드)<ul>
+<li>데이터 타입이 유효하지 않은 작업 =&gt; 컴파일 타임에 오류 발생 (런타임 X)</li>
+<li>잘못된 데이터로부터 보호는 X</li>
+<li>그러나 보다 우아하게 데이터를 제어, 구조화 가능</li>
+</ul>
+</li>
+<li>+ <strong>로컬과 분산 환경의 워크로드에서 재사용 가능</strong><ul>
+<li>When?<ul>
+<li>단일 노드의 워크로드와 스파크 워크로드에서 전체 로우에 대한 다양한 트랜스포메이션을 재사용하고자할 때</li>
+</ul>
+</li>
+<li>How? <ul>
+<li>스파크 API = Scala의 Sequence 타입 API 가 일부 반영 + 분산 방식 동작 (<a target="_blank" rel="noopener" href="http://bit.ly/2NFqKGZ">Scala 만든 형 said</a>)</li>
+<li>케이스 클래스로 구현된 데이터 타입으로 모든 데이터와 트랜스포메이션을 정의하면 재사용 가능</li>
+</ul>
+</li>
+<li>또한 올바른 클래스, 데이터 타입이 지정된 DataFrame을 로컬 디스크에 저장하면 다음 처리 과정에서 사용 가능 (more easy)</li>
+</ul>
+</li>
+<li>DataFrame + Dataset 동시 사용<ul>
+<li>성능 &lt;-&gt; 타입 안정성 (Trade-Off)</li>
+<li>대량의 DataFrame 기반의 ETL 트랜스포메이션의 <U>마지막 단계</U>에서 사용 가능<ul>
+<li>ex. 드라이버로 데이터를 수집 후, 단일 노드의 라이브러리로 수집된 데이터 처리하는 경우</li>
+</ul>
+</li>
+<li>트랜스포메이션 <U>첫 단계</U>에서 사용도 가능<ul>
+<li>ex. 스파크 SQL에서 필터링 전에 로우 단위로 데이터 파싱하는 경우</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="11-2-Dataset-생성"><a href="#11-2-Dataset-생성" class="headerlink" title="11.2 Dataset 생성"></a>11.2 Dataset 생성</h3><ul>
+<li>Dataset 생성은 수동 작업<ul>
+<li>정의할 스키마를 미리 알고 있어야 함</li>
+</ul>
+</li>
+<li>자바 (Java) : Encoders<ul>
+<li>데이터 타입 클래스 정의 후,  DataFrame (<code>= Dataset&lt;Row&gt;</code>) 에 지정해서 인코딩<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.apache.spark.sql.Encoders;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Flight</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">  String DEST_COUNTRY_NAME;</span><br><span class="line">  String ORIGIN_COUNTRY_NAME;</span><br><span class="line">  Long DEST_COUNTRY_NAME;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Dataset&lt;Flight&gt; flights = spark.read</span><br><span class="line">  .parquet(<span class="string">&quot;/data/flight-data/parquet/2010-summary.parquet/&quot;</span>)</span><br><span class="line">  .as(Encoders.bean(Flight.class)); <span class="comment">// Encoders 지정</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li>스칼라 (Scala) : 케이스 클래스<ul>
+<li>Scala의 케이스 클래스 (<code>case class</code>) 는 정규 클래스(regular class)</li>
+<li>특징<ul>
+<li><strong>불변성</strong></li>
+<li>패턴 매칭으로 분해가능</li>
+<li>참조값 대신 클래스 구조를 기반으로 비교</li>
+<li>사용하기 쉽고 다루기 편함</li>
+</ul>
+</li>
+<li>장점<ul>
+<li>불변성 =&gt; 객체의 변경 추적 필요 X</li>
+<li>값 대신 구조로 비교 가능 =&gt; 클래스 인스턴스가 값으로 비교되는지 참조로 비교되는지 걱정 X (값 비교시 인스턴스를 primitive 데이터 타입 값 처럼 비교함)</li>
+<li>패턴 매칭 =&gt; 로직 분기 단순화 (버그 ↓ 가독성 ↑)</li>
+<li>(더 자세한 건 <a target="_blank" rel="noopener" href="https://bit.ly/2xdwSfd">스칼라 문서</a> 참고)</li>
+</ul>
+</li>
+<li>case class 로 데이터 타입 정의. DataFrame의 <code>as()</code> 로 변환<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> <span class="class"><span class="keyword">class</span> <span class="title">Flight</span>(<span class="params"><span class="type">DEST_COUNTRY_NAME</span>: <span class="type">String</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">                  <span class="type">ORIGIN_COUNTRY_NAME</span>: <span class="type">String</span>, count: <span class="type">BigInt</span></span>)</span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class"><span class="title">val</span> <span class="title">flightsDF</span> </span>= spark.read</span><br><span class="line">  .parquet(<span class="string">&quot;/data/flight-data/parquet/2010-summary.parquet/&quot;</span>)</span><br><span class="line"><span class="keyword">val</span> flights = flightsDF.as[<span class="type">Flight</span>] <span class="comment">// Dataset</span></span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="11-3-액션"><a href="#11-3-액션" class="headerlink" title="11.3 액션"></a>11.3 액션</h3><ul>
+<li>Dataset, DataFrame의 힘보다 “액션을 적용할 수 있다”는 사실이 더 중요하다<ul>
+<li><code>collect()</code>, <code>take()</code>, <code>count()</code> …</li>
+</ul>
+</li>
+<li>케이스 클래스에 실제로 접근 시 “어떠한 데이터 타입도 필요하지 않다”는 사실도 알아라<ul>
+<li>‘속성 명’ 으로 해당 값 &amp; 데이터 타입 모두 반환됨</li>
+</ul>
+</li>
+</ul>
+<p style="color:lightgray">말투 무엇..</p>
+
+<h3 id="11-4-트랜스포메이션"><a href="#11-4-트랜스포메이션" class="headerlink" title="11.4 트랜스포메이션"></a>11.4 트랜스포메이션</h3><ul>
+<li>Dataset의 트랜스포메이션 == DataFrame의 트랜스포메이션<ul>
+<li>Dataset은 원형의 JVM 데이터 타입을 다루므로, 더 복잡하고 강력한 데이터 타입으로 사용 가능</li>
+<li>원형 객체 다루는 법? =&gt; <strong>필터링 &amp; 매핑</strong></li>
+</ul>
+</li>
+<li>필터링<ul>
+<li>불리언 값을 반환하는 함수 (=&gt; <strong>일반 함수</strong>) 정의<ul>
+<li>스파크 SQL은 <strong>사용자 정의 함수</strong> 정의</li>
+<li>스파크는 정의된 함수로 모든 로우를 평가 (자원 사용량 ↑)</li>
+<li>단순 필터의 경우 SQL 표현식 사용 권장</li>
+<li>데이터 필터링 비용 ↓ 다음 처리과정에서 Dataset으로 데이터 다루기 가능</li>
+</ul>
+</li>
+<li>단순 트랜스포메이션</li>
+</ul>
+</li>
+<li>매핑<ul>
+<li>특정 값을 다른 값으로 매핑 작업 (값 추출/비교 등의 정교한 처리)</li>
+<li>DataFrame의 매핑 = Dataset의 <code>select()</code></li>
+<li>컴파일 타임에 데이터 타입 유효성 검사 가능 (스파크가 결과로 반환되는 JVM 데이터 타입을 알고 있기 때문)</li>
+</ul>
+</li>
+<li>사실 DataFrame 사용을 권장함<ul>
+<li>매핑 작업보다 더 많은 장점.. (ex. 코드 생성 기능) 대다수의 매핑작업 수행가능..</li>
+<li>하지만 훨씬 정교하게 로우 단위 처리가 필요하다면 Dataset</li>
+</ul>
+</li>
+</ul>
+<h3 id="11-5-조인"><a href="#11-5-조인" class="headerlink" title="11.5 조인"></a>11.5 조인</h3><ul>
+<li>조인도 DataFrame과 동일하게 제공<ul>
+<li>Dataset은 정교한 메서드 제공 =&gt; <code>joinWith()</code></li>
+</ul>
+</li>
+<li><code>joinWith()</code><ul>
+<li>co-group (RDD) 과 거의 유사</li>
+<li>Dataset 안쪽에 다른 두 개의 중첩된 Dataset으로 구성<ul>
+<li>각 컬럼은 단일 Dataset =&gt; Dataset 객체를 컬럼처럼 다루기 가능</li>
+</ul>
+</li>
+<li>=&gt; 조인 시 더 많은 정보 유지 가능. 고급 맵이나 필터처럼 정교한 데이터 다루기 가능</li>
+</ul>
+</li>
+<li>일반 조인 (<code>join()</code>)<ul>
+<li>=&gt; 결과가 DataFrame으로 반환. JVM 데이터 타입 정보를 잃음</li>
+<li>DataFrame + Dataset 조인도 문제 X (동일 결과 반환) </li>
+</ul>
+</li>
+</ul>
+<h3 id="11-6-그룹화와-집계"><a href="#11-6-그룹화와-집계" class="headerlink" title="11.6 그룹화와 집계"></a>11.6 그룹화와 집계</h3><ul>
+<li>동일한 기본 표준을 따름<ul>
+<li><code>groupBy()</code>, <code>rollup()</code>, <code>cube()</code> 그대로 사용 가능</li>
+<li>단, DataFrame을 반환 (데이터 타입 정보 잃음)</li>
+</ul>
+</li>
+<li>데이터 타입 정보를 유지하려면?<ul>
+<li>ex. <code>groupByKey()</code><ul>
+<li>Dataset 특정 키 기준으로 그룹화하고 형식화된 Dataset 반환</li>
+<li>파라미터는 함수 사용 (컬럼명 X) =&gt; 유연성 good / 최적화 X<ul>
+<li>스파크는 함수랑 JVM 데이터 타입 최적화 X</li>
+<li>(성 능 차 이)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>groupByKey vs groupBy<ul>
+<li>데이터 스캔 직후에 집계를 수행하는 groupBy 보다 처리비용이 더 비쌈</li>
+<li>따라서  사용자가 정의한 인코딩으로 세밀한 처리가 필요하는 등의 필요한 경우에만 사용할 것</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Dataset은 빅데이터 처리 파이프라인의 처음과 끝에서 주로 사용 할 것</li>
+</ul>
+<h3 id="11-7-정리"><a href="#11-7-정리" class="headerlink" title="11.7 정리"></a>11.7 정리</h3><ul>
+<li>Dataset의 기초와 Dataset 사용이 적합한 경우</li>
+<li>Dataset을 사용하기 위한 기본 지식 및 사용 방법</li>
+<li>Dataset = 고수준의 구조적 API + 저수준 RDD API</li>
+</ul>
+<h3 id="📒-단어장"><a href="#📒-단어장" class="headerlink" title="📒 단어장"></a>📒 단어장</h3></div><p class="post-tags"><i class="fa fa-tags" aria-hidden="true"></i><a href="/tags/study/">#study</a><a href="/tags/book/">#book</a><a href="/tags/spark/">#spark</a><a href="/tags/apache/">#apache</a></p></article></div><footer><div class="paginator"><a class="next" href="/2021/02/23/Spark-The-Definitive-Guide-10%EC%9E%A5/">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'minsw-github-io';
+var disqus_identifier = '2021/03/01/Spark-The-Definitive-Guide-11장/';
+var disqus_title = '&amp;#039;Spark The Definitive Guide&amp;#039; 11장 - 셋뚜셋뚜 데이터셋뚜 (PART 2 끝)';
+var disqus_url = 'https://minsw.github.io/2021/03/01/Spark-The-Definitive-Guide-11장/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//#{theme.disqus}.disqus.com/count.js" async></script><div class="copyright"><p>© 2018 - 2021 <a href="https://minsw.github.io">Lukka Min</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-143001954-1",'auto');ga('send','pageview');</script><link rel="stylesheet" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css" media="screen" type="text/css"><script src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script><script>$(function(){$('.datatable').dataTable( {"order": [[ 0, "desc" ]],"iDisplayLength": -1,"lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]} );});</script></body></html>

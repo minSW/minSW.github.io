@@ -1,0 +1,442 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> &#039;Spark The Definitive Guide&#039; 10장 - SQL 너마저 · Look out</title><meta name="description" content="&amp;#039;Spark The Definitive Guide&amp;#039; 10장 - SQL 너마저 - Lukka Min"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/cover.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link rel="search" type="application/opensearchdescription+xml" href="https://minsw.github.io/atom.xml" title="Look out"><script src="//code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script><meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Look out" type="application/atom+xml">
+</head><body><div class="wrap"><header><a class="logo-link" href="/"><img src="/cover.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a class="nav-list-link" href="/" target="_self">BLOG</a></li><li class="nav-list-item"><a class="nav-list-link" href="/archives/" target="_self">ARCHIVE</a></li><li class="nav-list-item"><a class="nav-list-link" href="/tags/" target="_self">TAG</a></li><li class="nav-list-item"><a class="nav-list-link" href="https://github.com/minSW" target="_blank">GITHUB</a></li></ul></header><main class="container"></main><div class="post"><article class="post-block"><h1 class="post-title">&#039;Spark The Definitive Guide&#039; 10장 - SQL 너마저</h1><div class="post-info">2021년 2월 23일<span class="categories"><i class="fa fa-bookmark" aria-hidden="true"></i></span><a class="post-category" href="/categories/spark/">#spark</a></div><div class="post-content"><img src="https://user-images.githubusercontent.com/26691216/109770707-3e9a1000-7c3f-11eb-9e63-1a6235580fa8.jpg" width=300/>
+
+<center><h2>_ _ _</h2></center>
+
+<br/>
+
+<hr>
+<h1 id="CHAPTER-10-스파크-SQL"><a href="#CHAPTER-10-스파크-SQL" class="headerlink" title="CHAPTER 10 스파크 SQL"></a>CHAPTER 10 스파크 SQL</h1><p><strong>스파크 SQL</strong>은 스파크에서 가장 중요하고 강력한 기능 중 하나.<br>스파크 SQL은 DataFrame, Dataset API에 통합되어 있다<br>(=&gt; 즉 SQL, DataFrame 기능 모두 사용 가능 &amp; 동일한 실행 코드로 컴파일)</p>
+<ul>
+<li>DB에 생성된 뷰(view)나 테이블에 SQL쿼리 실행 가능</li>
+<li>시스템 함수 사용, 사용자 정의 함수 정의 가능</li>
+<li>쿼리 실행 계획 분석 가능 (=&gt; 워크로드 최적화)</li>
+</ul>
+<h3 id="10-1-SQL이란"><a href="#10-1-SQL이란" class="headerlink" title="10.1 SQL이란"></a>10.1 SQL이란</h3><ul>
+<li>SQL (Structured Query Launguage, 구조적 질의 언어)<ul>
+<li>데이터에 대한 관계형 연산을 표한하기 위한 <strong>도메인 특화 언어</strong></li>
+<li><U>모든 관계형 데이터베이스</U>에서 사용</li>
+<li>NoSQL 데이터베이스에서도 쉽게 사용 가능한 변형된 자체 SQL 제공</li>
+<li><p style="color:lightgray"> 없어질거다~ 진다~ 해도 없어질 수가 없는 데이터 처리 언어 계의 짱짱맨 </p></li>
+</ul>
+</li>
+<li>스파크 SQL<ul>
+<li><a target="_blank" rel="noopener" href="https://bit.ly/2NcpcVl">ANSI SQL:2003</a> 의 일부를 구현</li>
+<li>=&gt; 대부분의 SQL DB에서 채택하고 있는 표준 (so 유명 벤치마크도 통과)</li>
+</ul>
+</li>
+</ul>
+<h3 id="10-2-빅데이터와-SQL-아파치-하이브"><a href="#10-2-빅데이터와-SQL-아파치-하이브" class="headerlink" title="10.2 빅데이터와 SQL: 아파치 하이브"></a>10.2 빅데이터와 SQL: 아파치 하이브</h3><ul>
+<li>스파크 등장 전<ul>
+<li>사실상 빅데이터 SQL 접근 계층의 표준 =&gt; <strong>Hive</strong> (made by Facebook)</li>
+<li>하둡을 다양한 사업군으로 진출하는데 도움</li>
+</ul>
+</li>
+<li>스파크는 RDD를 이용하는 범용  처리 엔진으로 시작했지만, 현재는 많은 이용자가<br>스파크 SQL 사용 중</li>
+</ul>
+<h3 id="10-3-빅데이터와-SQL-스파크-SQL"><a href="#10-3-빅데이터와-SQL-스파크-SQL" class="headerlink" title="10.3 빅데이터와 SQL: 스파크 SQL"></a>10.3 빅데이터와 SQL: 스파크 SQL</h3><ul>
+<li>Hive 지원하는 상위 호환 기능 지원<ul>
+<li>스파크 2.0 버전. 자체 개발된 SQL 파서 포함</li>
+<li>=&gt; ANSI-SQL, HiveQL 모두 지원</li>
+</ul>
+</li>
+<li>스파크 SQL은 DataFrame과의 뛰어난 호환성<ul>
+<li>다양한 기업에서 강력한 기능으로 자리매김할 수 있는 이유</li>
+<li>ex. Facebook 의 <a target="_blank" rel="noopener" href="https://bit.ly/2bLrvJG">스파크 워크로드 (2016)</a> (블로그 내용 <code>p.280-281</code>)</li>
+</ul>
+</li>
+<li>스파크 SQL의 강력함을 만드는 핵심 요인<ul>
+<li>SQL 분석가) Thrift Server 나 SQL 인터페이스에 접속해, 스파크 연산 능력 활용 가능</li>
+<li>데이터 엔지니어 &amp; 과학자) 전체 데이터 처리 파이프라인에 스파크 SQL 사용 가능</li>
+</ul>
+</li>
+<li>스파크 SQL (통합형 API) 으로 인해 가능해진 전체 과정<ul>
+<li>SQL 로 데이터 조회</li>
+<li>=&gt; DataFrame으로 변환</li>
+<li>=&gt; 스파크 MLlib (대규모 머신러닝 알고리즘) 수행 결과를 다른 데이터 소스에 저장</li>
+</ul>
+</li>
+<li>단, 스파크 SQL은 <strong>OLAP</strong> 데이터베이스로 동작 (OLTP X)<ul>
+<li><strong>OLAP</strong> (OnLine Analytic Processing, 온라인 분석용)</li>
+<li>OLTP (OnLine Transaction Processing, 온라인 트랜잭션 처리)</li>
+<li>=&gt; 따라서 매우 낮은 지연 시간이 필요한 쿼리 수행용도로는 사용 X</li>
+<li>언젠가는 인플레이스 수정(in-place modification) 방식을 지원할수는 있으나, 현재는 <strong>사용 불가</strong></li>
+</ul>
+</li>
+</ul>
+<h4 id="스파크와-하이브의-관계"><a href="#스파크와-하이브의-관계" class="headerlink" title="스파크와 하이브의 관계"></a>스파크와 하이브의 관계</h4><ul>
+<li>스파크 SQL은 Hive 메타스토어 사용 =&gt; 하이브와 연동 good<ul>
+<li>Hive 메타스토어는 여러 세션에서 사용할 테이블 정보 보관</li>
+<li>(Hive 사용 시) 스파크 SQL 는 Hive Metastore에 접속해서 조회할 파일 수를 최소화 하기 위해 메타데이터 참조함<ul>
+<li>=&gt; 기존 하둡 환경의 모든 워크로드를 스파크로 이관하기 좋음</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Hive Metastore <ul>
+<li>접속하기위해 필요한 속성<ul>
+<li><code>spark.sql.hive.metastore.version</code> (default 1.2.1)</li>
+<li><code>spark.sql.hive.metastore.jars</code> : HiveMetastoreClient 초기화 방식 변경</li>
+</ul>
+</li>
+<li>스파크는 기본 버전 사용 (호환을 위해 클래스패스에 정의도 가능)</li>
+<li>Hive Metastore가 저장된 다른 데이터베이스 접속 시<ul>
+<li>적합한 클래스 접두사 정의 필요 (ex. MySQL =&gt; <code>com.mysql.jdbc</code>)</li>
+<li>접두사 정의 후 <code>spark.sql.hive.metastore.sharedPrefixes</code> 속성에 설정하여 스파크, 하이브에서 공유</li>
+</ul>
+</li>
+<li>사용하던 하이브 메타스토어와 연동 시, <a target="_blank" rel="noopener" href="http://bit.ly/2DFlcrL">스파크 공식 문서</a> 에서 부가 정보 확인</li>
+</ul>
+</li>
+</ul>
+<h3 id="10-4-스파크-SQL-쿼리-실행-방법"><a href="#10-4-스파크-SQL-쿼리-실행-방법" class="headerlink" title="10.4 스파크 SQL 쿼리 실행 방법"></a>10.4 스파크 SQL 쿼리 실행 방법</h3><ul>
+<li>스파크가 SQL 쿼리 실행을 위하여 제공하는 인터페이스</li>
+<li>(1) 스파크 SQL CLI</li>
+<li>(2) 스파크의 프로그래밍 SQL 인터페이스</li>
+<li>(3) 스파크 SQL 쓰리프트 JDBC/ODBC 서버</li>
+</ul>
+<h3 id="10-5-카탈로그"><a href="#10-5-카탈로그" class="headerlink" title="10.5 카탈로그"></a>10.5 카탈로그</h3><ul>
+<li><strong>카탈로그</strong> (catalog) : 스파크 SQL에서 가장 높은 추상화 단계<ul>
+<li>테이블에 저장된 데이터에 대한 메타데이터 + 데이터베이스, 테이블, 함수, 뷰에 대한 정보 까지 추상화</li>
+</ul>
+</li>
+<li><code>org.apache.spark.sql.catalog.Catalog</code> 패키지<ul>
+<li>테이블, 데이터베이스, 함수 조회 등 여러 유용한 함수 제공</li>
+</ul>
+</li>
+<li>스파크 SQL을 사용하는 또 다른 방식의 <U>프로그래밍 인터페이스</U> 이다<ul>
+<li>=&gt; <code>saprk.sql</code> 함수를 사용해 관련 코드 실행 가능</li>
+</ul>
+</li>
+</ul>
+<h3 id="10-6-테이블"><a href="#10-6-테이블" class="headerlink" title="10.6 테이블"></a>10.6 테이블</h3><ul>
+<li>스파크 SQL 사용을 위해서는 테이블 정의 부터 필요</li>
+<li>테이블은 ‘명령을 실행할 데이터의 구조’<ul>
+<li>DataFrame과 논리적으로 동일</li>
+<li>=&gt; 테이블로 조인, 필터링, 집계 등의 여러 데이터 변환 작업 수행 가능</li>
+</ul>
+</li>
+<li>테이블 vs DataFrame<ul>
+<li>테이블은 데이터베이스에서 정의, DataFrame은 프로그래밍 언어로 정의</li>
+<li>스파크에서 테이블 생성시 =&gt; <U><strong>default</strong> 데이터 베이스에 등록</U></li>
+</ul>
+</li>
+<li>테이블은 <strong>‘항상 데이터를 가지고 있다’</strong> (스파크 2.x 버전)<ul>
+<li>임시 테이블 개념 X</li>
+<li>데이터를 가지지않은 뷰만 존재 (테이블 X)</li>
+<li>테이블 제거 시 모든 데이터 제거됨</li>
+</ul>
+</li>
+</ul>
+<h4 id="테이블-다루기"><a href="#테이블-다루기" class="headerlink" title="테이블 다루기"></a>테이블 다루기</h4><ul>
+<li><p>스파크 관리형 테이블</p>
+<ul>
+<li>테이블은 두 가지 중요 정보 저장 =&gt; 테이블의 데이터 &amp; 테이블에 대한 데이터 (<strong>메타데이터</strong>)</li>
+<li>관리형 테이블 &amp; 외부 테이블 개념 알기<ul>
+<li><strong>관리형 테이블</strong> : DataFrame의 <code>saveAsTable()</code> 로 생성 (스파크가 관련된 모든 정보를 추적 가능)</li>
+<li><strong>외부 테이블</strong> : 디스크에 저장된 파일을 이용해 테이블을 정의 (파일의 메타데이터 관리)</li>
+</ul>
+</li>
+<li><code>saveAsTable()</code> 메서드<ul>
+<li>테이블을 읽고, 데이터를 스파크 포맷으로 변환 후, 새로운 경로에 저장 (Hive 기본 웨어하우스 경로)</li>
+</ul>
+</li>
+<li>저장 경로에서 데이터베이스 목록 확인 가능<ul>
+<li>기본 저장 경로 : /user/hive/warehouse</li>
+<li>저장 경로 변경? =&gt; SparkSession 생성 시 <code>spark.sql.warehouse.dir</code> 에 설정</li>
+</ul>
+</li>
+<li><code>show tables IN &#123;databaseName&#125;</code> 쿼리로 특정 데이터베이스 테이블 확인 가능</li>
+</ul>
+</li>
+<li><p>테이블 생성하기</p>
+<ul>
+<li>다양한 데이터소스로 테이블 생성 가능</li>
+<li>스파크는 SQL에서 전체 데이터소스 API 재사용 가능<ul>
+<li>즉, 테이블 정의 후 테이블에 데이터 적재 필요 X (?)</li>
+<li>실행 즉시 테이블 생성</li>
+</ul>
+</li>
+<li>파일에서 데이터 읽을 때 모든 종류의 정교한 옵션 지정 가능<ul>
+<li><code>USING</code> (Hive : <code>STORED AS</code>)</li>
+<li>스파크는 포맷 미 지정 시, 기본적으로 하이브 SerDe 설정 사용 가능 (스파크 자체 직렬화보다 훨씬 느림)  </li>
+</ul>
+</li>
+<li>테이블 특정 컬럼에 코멘트(<code>COMMENT</code>) 추가 가능</li>
+<li>SELECT 쿼리 결과로 테이블 생성 가능<ul>
+<li>=&gt; CTAS (Create Table .. As .. Select ..) 패턴</li>
+</ul>
+</li>
+<li>파티셔닝 데이터셋을 저장해 데이터 레이아웃 제어 가능 (<a href="https://minsw.github.io/2021/02/16/Spark-The-Definitive-Guide-9%EC%9E%A5/">9장</a> 참고)</li>
+<li>스파크에 접속한 세션에서도 생성된 테이블 사용 가능<ul>
+<li>사용자가 임시 뷰를 만들어서 사용 가능 (스파크에는 임시 테이블 X)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>외부 테이블 생성하기</p>
+<ul>
+<li>스파크 SQL은 HiveQL 과 완벽하게 호환 <ul>
+<li>HiveQL 대부분 그대로 사용 가능</li>
+</ul>
+</li>
+<li>스파크는 외부 테이블의 메타데이터 관리 (스파크에서 데이터 파일은 관리 X)</li>
+<li><code>CREATE EXTERNAL TABLE</code> 구문</li>
+<li>마찬가지로 쿼리 결과로 생성도 가능 (CTAS 패턴)</li>
+</ul>
+</li>
+<li><p>테이블에 데이터 삽입하기</p>
+<ul>
+<li><code>INSERT INTO</code> 구문 (표준 SQL 문법 사용)</li>
+<li>특정 파티션에만 저장하고 싶다면? =&gt; 파티션 명세 추가<ul>
+<li>쓰기 연산은 파티셔닝 스키마에 맞게 데이터 저장 (단, 매우 느리게 동작할 수도)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>테이블 메타데이터 확인하기</p>
+<ul>
+<li><code>DESCRIBE</code> 구문 : 테이블의 메타데이터 정보 반환<ul>
+<li>테이블 생성 시 추가된 코멘트 확인 가능</li>
+</ul>
+</li>
+<li><code>SHOW PARTITIONS</code> 으로 파티셔닝 스키마 정보 확인 가능 (파티션된 테이블인 경우)</li>
+</ul>
+</li>
+<li><p>테이블 메타데이터 갱신하기</p>
+<ul>
+<li>가장 최신의 데이터셋을 읽고 있다는 것을 보장하려면? =&gt; “테이블 메타데이터 유지” (중요!)</li>
+<li><code>REFRESH TABLE</code> 구문 : 테이블과 관련된 모든 캐싱된 항목 갱신 (기본적으로 파일)<ul>
+<li>테이블이 이미 캐싱된 경우, 다음번 스캔 동작하는 시점에 다시 캐싱</li>
+</ul>
+</li>
+<li><code>REPAIR TABLE</code> 구문 : 카탈로그에서 관리하는 테이블의 파티션 정보 새로고침<ul>
+<li>새로운 파티션 정보 수집에 초점</li>
+<li>ex. 수동으로 신규파티션을 만들면 테이블을 수리(repair) 해야함</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>테이블 제거하기</p>
+<ul>
+<li>테이블은 삭제(delete)할 수 없고, 오로지 <strong>제거(drop)</strong> 만 가능하다</li>
+<li><code>DROP TABLE</code> 구문<ul>
+<li>관리형 테이블 제거 시, <U><strong>데이터와 테이블 정의 모두 제거</strong>됨</U></li>
+<li>존재하지 않는 테이블 제거 시 오류 발생 </li>
+<li>=&gt; 테이블 존재 시에만 제거하는 <code>DROP TABLE IF EXISTS</code> 대신 사용</li>
+</ul>
+</li>
+<li>외부 테이블 제거하기<ul>
+<li>데이터는 삭제되지 않으나, 더는 외부 테이블 명으로 조회 불가</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>테이블 캐싱하기</p>
+<ul>
+<li><code>CACHE TABLE</code> 로 테이블을 캐시 가능</li>
+<li><code>UNCACHE TABLE</code> 로 캐시에서 제거 가능</li>
+</ul>
+</li>
+</ul>
+<h3 id="10-7-뷰"><a href="#10-7-뷰" class="headerlink" title="10.7 뷰"></a>10.7 뷰</h3><ul>
+<li>뷰는 기존 테이블에 여러 트랜스포메이션 작업 지정<ul>
+<li>기본적으로 뷰는 ‘단순 쿼리 실행 계획’</li>
+<li>쿼리 로직 체계화 &amp; 재사용하기 편리</li>
+</ul>
+</li>
+<li>스파크가 가진 뷰에 관련된 다양한 개념<ul>
+<li>데이터베이스에 설정하는 전역 뷰</li>
+<li>세션별 뷰</li>
+</ul>
+</li>
+<li>최종사용자 입장에서 뷰는 테이블처럼 보인다<ul>
+<li>신규 경로에 모든 데이터를 다시 저장 X</li>
+<li>대신 단순하게 쿼리시점에 데이터소스에 트랜스포메이션 수행</li>
+<li>트랜스포메이션 예) filter, select, 대규모 group by, rollup</li>
+</ul>
+</li>
+</ul>
+<h4 id="뷰-다루기"><a href="#뷰-다루기" class="headerlink" title="뷰 다루기"></a>뷰 다루기</h4><ul>
+<li><p>뷰 생성하기</p>
+<ul>
+<li><code>CREATE VIEW</code> 구문 사용</li>
+<li>임시 뷰 생성 : <code>CREATE TEMP VIEW</code><ul>
+<li>현재 세션에서만 사용할 수 있는 임시 뷰</li>
+<li>(테이블처럼 데이터베이스에 등록 X)</li>
+</ul>
+</li>
+<li>전역적 임시 뷰(global temp view) 생성 : <code>CREATE GLOBAL TEMP VIEW</code><ul>
+<li>데이터베이스에 상관없이 사용 가능. 전체 스파크 애플리케이션에서 볼 수 O</li>
+<li>단, 세션 종료 시 뷰도 제거</li>
+</ul>
+</li>
+<li>뷰 덮어쓰기 : <code>CREATE OR REPLACE TEMP VIEW</code> (임시뷰, 일반뷰 모두)</li>
+<li>뷰는 실질적으로 트랜스포메이션 이다<ul>
+<li>스파크는 쿼리가 실행될때만 뷰에 정의된 트랜스포메이션 수행</li>
+<li>즉, 테이블의 데이터를 실제로 조회하는 경우에만 필터 적용</li>
+</ul>
+</li>
+<li>뷰는 <U>기존 DataFrame에서 새로운 DataFrame 만드는 것과 동일</U></li>
+</ul>
+</li>
+<li><p>뷰 제거하기</p>
+<ul>
+<li><code>DROP VIEW (IF EXISTS)</code> 사용</li>
+<li>뷰 제거 vs 테이블 제거<ul>
+<li>뷰 정의는 제거되지만, <strong>어떤 데이터도 제거되지 않음</strong></li>
+<li>(테이블 제거는 데이터도 모두 제거됨)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="10-8-데이터베이스"><a href="#10-8-데이터베이스" class="headerlink" title="10.8 데이터베이스"></a>10.8 데이터베이스</h3><ul>
+<li>데이터 베이스 = 여러 테이블을 조직화하기 위한 도구</li>
+<li>데이터베이스 미정의 시 스파크는 기본 데이터베이스 사용 (default)</li>
+<li>스파크에서 실행하는 모든 SQL 명령문은 실행 중인 데이터베이스 범위에서 실행<ul>
+<li><p style="color:lightgray"> 데이터베이스 변경 시, 이전에 생성한 모든 사용자 테이블은 변경 전 데이터베이스에 속해 있으므로 다르게 쿼리해야함 (뭔 소린가 했더니..)</p> </li>
+<li>=&gt; 즉, 다른 데이터베이스 사용 시 <code>데이터베이스 명 + 테이블 명</code> 으로 조회할 것</li>
+</ul>
+</li>
+<li><code>SHOW DATABASES</code> 으로 전체 데이터베이스 목록 확인</li>
+</ul>
+<h4 id="데이터베이스-다루기"><a href="#데이터베이스-다루기" class="headerlink" title="데이터베이스 다루기"></a>데이터베이스 다루기</h4><ul>
+<li>데이터베이스 생성하기<ul>
+<li><code>CREATE DATABASE</code> 사용</li>
+</ul>
+</li>
+<li>데이터베이스 설정하기<ul>
+<li><code>USE &#123;databaseName&#125;</code> 으로 쿼리 수행할 데이터베이스 설정</li>
+<li>다른 테이블에 쿼리 수행시 접두사 사용</li>
+<li><code>SELECT current_database()</code> : 현재 사용중인 데이터베이스 확인</li>
+</ul>
+</li>
+<li>데이터베이스 제거하기<ul>
+<li><code>DROP DATABASE (IF EXISTS)</code> 사용</li>
+<li>Q. 스파크 데이터베이스 삭제 시, 데이터는?</li>
+</ul>
+</li>
+</ul>
+<h3 id="10-9-select-구문"><a href="#10-9-select-구문" class="headerlink" title="10.9 select 구문"></a>10.9 select 구문</h3><ul>
+<li>스파크 SQL은 ANSI-SQL 요건 충족<ul>
+<li>SELECT 표현식 구조는 <code>p.296</code> 참고</li>
+</ul>
+</li>
+<li>case…when…then 구문<ul>
+<li>SQL 쿼리 값을 조건에 맞게 처리 가능</li>
+<li>(like if-else statement)</li>
+</ul>
+</li>
+</ul>
+<h3 id="10-10-고급-주제"><a href="#10-10-고급-주제" class="headerlink" title="10.10 고급 주제"></a>10.10 고급 주제</h3><ul>
+<li>데이터 쿼리 방법 알아보기<ul>
+<li>SQL 쿼리 : 특정 명령 집합을 실행하도록 요청하는 SQL 구문</li>
+<li><U>조작, 정의, 제어</U> 와 관련된 명령 정의 가능</li>
+<li>=&gt; 본 책은 대부분 <strong>조작</strong> 관련</li>
+</ul>
+</li>
+<li>복합 데이터 타입<ul>
+<li>표준SQL에는 존재하지 않는 강력한 기능</li>
+<li>스파크 SQL의 핵심 복합 데이터 타입 3가지 =&gt; <strong>구조체, 리스트, 맵</strong></li>
+<li>구조체 : 중첩 데이터 생성/쿼리 방법 제공<ul>
+<li>맵에 가까움</li>
+</ul>
+</li>
+<li>리스트 : 값의 배열이나 리스트 사용<ul>
+<li>집계 함수 <code>collection_list()</code>, <code>collect_set()</code> 으로 생성 가능 (단, 집계 연산 시에만 사용 가능) </li>
+<li><code>ARRAY</code> 로 컬럼에 직접 배열 생성 가능</li>
+<li><code>explode()</code> : 저장된 배열의 모든 값을 단일 로우 형태로 분해 (&lt;-&gt; <code>collect()</code>)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>함수<ul>
+<li>스파크 SQL은 다양한 고급 함수 제공 (<a target="_blank" rel="noopener" href="http://bit.ly/2DPAycx">DataFrame 함수 문서</a> 에서 확인)</li>
+<li><code>SHOW FUNCTIONS</code> 으로 스파크 SQL이 제공하는 전체 함수 목록 확인 가능  <ul>
+<li><code>SHOW SYSTEM FUNCTIONS</code> : 스파크에 내장된 시스템 함수 목록</li>
+<li><code>SHOW USER FUNCTIONS</code> : 누군가가 스파크 환경에 공개한 함수 목록 (=  <strong>사용자 정의 함수</strong>)</li>
+<li>와일드카드 문자(*)로 필터링 가능</li>
+<li><code>LIKE</code> 키워드 사용 가능</li>
+</ul>
+</li>
+<li><code>DESCRIBE FUNCTION &#123;functionName&#125;</code> : 개별 함수의 설명과 사용법 반환 </li>
+<li>사용자 정의 함수<ul>
+<li>스파크는 사용자 정의 함수를 정의하여 분산 환경에서 사용할 수 있는 기능 제공</li>
+<li>특정 언어로 함수 개발 후 등록하여 정의</li>
+<li>함수 등록/정의 방법 =&gt; <code>spark.udf.register()</code>, Hive의 <code>CREATE TEMPORARY FUNCTION</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>서브 쿼리<ul>
+<li>서브 쿼리 (subquery) : 쿼리안에 쿼리 지정<ul>
+<li>SQL 내 정교한 로직 명시 가능</li>
+<li>=&gt; 하나 (스칼라 서브쿼리) 이상의 결과 반환 가능?</li>
+</ul>
+</li>
+<li>스파크의 기본 서브쿼리 2가지<ul>
+<li><strong>상호연관 서브쿼리</strong> (correlated subquery) : 쿼리 외부 범위에 있는 일부 정보 사용 가능</li>
+<li><strong>비상호연관 서브쿼리</strong> (uncorrelated subquery) : 외부 범위 정보 사용 X</li>
+</ul>
+</li>
+<li><strong>조건절 서브쿼리</strong> (predicate subquery) 도 지원 =&gt; 값에 따라 필터링</li>
+<li>비상호 스칼라 쿼리(uncorrelated scalar query) 사용 시<ul>
+<li>기존에 없던 일부 부가 정보 가져오기 가능</li>
+<li>(?)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="10-11-다양한-기능"><a href="#10-11-다양한-기능" class="headerlink" title="10.11 다양한 기능"></a>10.11 다양한 기능</h3><ul>
+<li>지금까지의 내용과 잘 안맞는 몇가지 특징?<ul>
+<li>SQL 코드 성능 최적화, 디버깅 케이스 등..</li>
+</ul>
+</li>
+<li>설정<ul>
+<li>스파크 SQL 환경 설정 값 (<code>p.302-303 [표 10-1]</code> 참고)</li>
+<li>애플리케이션 초기화 시점 or 실행 시점에 설정 가능</li>
+</ul>
+</li>
+<li>SQL에서 설정값 지정하기<ul>
+<li><code>SET</code> 사용하여 SQL을 사용하여 환경 설정 가능 (단, 스파크 SQL 관련 설정에 한함)</li>
+<li>SQL 설정은 15장에서 자세히</li>
+</ul>
+</li>
+</ul>
+<h3 id="10-12-정리"><a href="#10-12-정리" class="headerlink" title="10.12 정리"></a>10.12 정리</h3><ul>
+<li>스파크 SQL 관련 세부사항</li>
+<li>스파크 SQL과 DataFrame은 매우 밀접한 연관</li>
+</ul>
+<h3 id="📒-단어장"><a href="#📒-단어장" class="headerlink" title="📒 단어장"></a>📒 단어장</h3><ul>
+<li>ANSI-SQL : 미국 표준 협회 ANSI (American National Standards Institute)에서 정립한 표준 SQL문</li>
+<li>워크로드 (workloads) : 고객 대면 애플리케이션이나 백엔드 프로세스 같이 비즈니스 가치를 창출하는 리소스 및 코드 모음. 또는 말그대로 시스템이 실행해야할 할당 작업량.</li>
+<li>Thrift Server<ul>
+<li>Apache Thrift (RPC Framework)? Hive의 Thrift Server?</li>
+<li>스파크의 Thrift =&gt; 여러 사용자의 JDBC(or OCBC) 접속을 받아 사용자 쿼리를 원격으로 스파크 SQL 세션으로 실행하는 스파크 애플리케이션<ul>
+<li><a target="_blank" rel="noopener" href="https://thebook.io/006908/part02/ch05/03/03/">참고 링크</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>OLTP vs OLAP<ul>
+<li>OLTP (OnLine Transaction Processing, 온라인 트랜잭션 처리) 는 DB서버에서 각각의 작업요청의 트랜잭션 처리 (CUD 무결성 보장) &amp; 결과 READ 과정</li>
+<li>OLAP (OnLine Analytic Processing, 온라인 분석용) 는 저장된 데이터를 바탕으로 요구와 목적에 맞는 분석 정보 제공</li>
+<li>즉, OLTP는 데이터 처리 중심, OLAP는 저장된 데이터 분석 중심</li>
+</ul>
+</li>
+<li>인플레이스 수정(in-place modifiction) 방식<ul>
+<li>in-place update?</li>
+</ul>
+</li>
+</ul>
+</div><p class="post-tags"><i class="fa fa-tags" aria-hidden="true"></i><a href="/tags/study/">#study</a><a href="/tags/book/">#book</a><a href="/tags/spark/">#spark</a><a href="/tags/apache/">#apache</a></p></article></div><footer><div class="paginator"><a class="prev" href="/2021/03/01/Spark-The-Definitive-Guide-11%EC%9E%A5/">PREV</a><a class="next" href="/2021/02/16/Spark-The-Definitive-Guide-9%EC%9E%A5/">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'minsw-github-io';
+var disqus_identifier = '2021/02/23/Spark-The-Definitive-Guide-10장/';
+var disqus_title = '&amp;#039;Spark The Definitive Guide&amp;#039; 10장 - SQL 너마저';
+var disqus_url = 'https://minsw.github.io/2021/02/23/Spark-The-Definitive-Guide-10장/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//#{theme.disqus}.disqus.com/count.js" async></script><div class="copyright"><p>© 2018 - 2021 <a href="https://minsw.github.io">Lukka Min</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-143001954-1",'auto');ga('send','pageview');</script><link rel="stylesheet" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css" media="screen" type="text/css"><script src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script><script>$(function(){$('.datatable').dataTable( {"order": [[ 0, "desc" ]],"iDisplayLength": -1,"lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]} );});</script></body></html>
