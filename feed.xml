@@ -6,7 +6,7 @@
   <link href="https://minsw.github.io/feed.xml" rel="self"/>
   
   <link href="https://minsw.github.io/"/>
-  <updated>2021-03-07T08:41:39.790Z</updated>
+  <updated>2021-03-15T17:29:17.190Z</updated>
   <id>https://minsw.github.io/</id>
   
   <author>
@@ -15,6 +15,39 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>&amp;#039;Spark The Definitive Guide&amp;#039; 13장 - RDD 심화반</title>
+    <link href="https://minsw.github.io/2021/03/15/Spark-The-Definitive-Guide-13%EC%9E%A5/"/>
+    <id>https://minsw.github.io/2021/03/15/Spark-The-Definitive-Guide-13%EC%9E%A5/</id>
+    <published>2021-03-15T13:05:03.000Z</published>
+    <updated>2021-03-15T17:29:17.190Z</updated>
+    
+    <content type="html"><![CDATA[<br/><p>RDD 쓰지 말래매…<br>자꾸 왜 이렇게 뭘 자세하게 알려주려고 하는데… 😔</p><img alt="class" src="https://user-images.githubusercontent.com/26691216/111161260-4b731800-85de-11eb-8870-31d56a87f978.gif" width=400/><center><h2>_ _ _</h2></center><br/><hr><h1 id="CHAPTER-13-RDD-고급-개념"><a href="#CHAPTER-13-RDD-고급-개념" class="headerlink" title="CHAPTER 13 RDD 고급 개념"></a>CHAPTER 13 RDD 고급 개념</h1><p>CHAPTER 12 는 RDD를 다루기 위한 기초적 내용과 생성하는 방법, 적합한 적용 케이스 등을 소개<br>CHAPTER 13 은 키-값 RDD 중심의 <strong>RDD 고급 연산</strong> 과 사용자 정의 파티션 등의 고급 주제 소개</p><ul><li>집계와 키-값 형태의 RDD</li><li>사용자 정의 파티셔닝</li><li>RDD 조인</li></ul><h3 id="13-1-키-값-형태의-기초-키-값-형태의-RDD"><a href="#13-1-키-값-형태의-기초-키-값-형태의-RDD" class="headerlink" title="13.1 키-값 형태의 기초(키-값 형태의 RDD)"></a>13.1 키-값 형태의 기초(키-값 형태의 RDD)</h3><ul><li><p>RDD에는 데이터를 key-value 형태로 다루는 다양한 메서드 존재</p><ul><li>=&gt; <code>&lt;연산명&gt;ByKey()</code> (PairRDD 타입만 사용 가능)</li></ul></li><li><p><strong>PairRDD 타입</strong></p><ul><li>만드는 가장 쉬운 방법?</li><li>=&gt; RDD에 맵 연산해서 키-값 구조로 만들기<ul><li>== RDD 레코드에는 두 개의 값이 존재한다<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">words.map(word =&gt; (word.toLowerCase, <span class="number">1</span>))</span><br><span class="line"><span class="comment">// org.apache.spark.rdd.RDD[(String, Int)]</span></span><br></pre></td></tr></table></figure></li></ul></li></ul></li><li><p><code>KeyBy()</code> : 현재 값으로부터 키 생성</p><ul><li>원본 단어는 생성된 RDD <strong>값</strong> 으로 유지</li></ul></li><li><p>값 매핑하기</p><ul><li>튜플 형태 데이터 사용 시 =&gt; 첫 번째를 키, 두 번째를 값 으로 추정 (<code>(key, value)</code>)</li><li><code>mapValues()</code> : 튜플에서 값만 추출 가능 (키 제외)</li><li><code>flatMap()</code> : 값에 대해 flatMap 적용하여 배열 반환 가능 (ex. 반환 결과의 각 로우가 문자를 나타내게)<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">keyword.mapValues(word =&gt; word.toUpperCase).collect()</span><br><span class="line"><span class="comment">// res12: Array[(String, String)] = Array((s,SPARK), (t,THE), (d,DEFINITIVE), (g,GUIDE), (:,:), (b,BIG), (d,DATA), (p,PROCESSING), (m,MADE), (s,SIMPLE))</span></span><br><span class="line"></span><br><span class="line">keyword.flatMapValues(word =&gt; word.toUpperCase).collect()</span><br><span class="line"><span class="comment">// res15: Array[(String, Char)] = Array((s,S), (s,P), (s,A), (s,R), (s,K), (t,T), (t,H), (t,E), (d,D), (d,E), (d,F), (d,I), (d,N), (d,I), (d,T), (d,I), (d,V), (d,E), (g,G), (g,U), (g,I), (g,D), (g,E), (:,:), (b,B), (b,I), (b,G), (d,D), (d,A), (d,T), (d,A), (p,P), (p,R), (p,O), (p,C), (p,E), (p,S), (p,S), (p,I), (p,N), (p,G), (m,M), (m,A), (m,D), (m,E), (s,S), (s,I), (s,M), (s,P), (s,L), (s,E))</span></span><br></pre></td></tr></table></figure></li></ul></li><li><p>키와 값 추출하기</p><ul><li><code>.keys</code>, <code>.values</code> 메서드로 키나 값 전체 추출 가능</li></ul></li><li><p><code>lookup()</code> : 특정 키에 관한 결과 찾기</p><ul><li>단, 오직 하나의 키만 찾을 수는 X (찾기 결과 전체 반환)</li></ul></li><li><p><code>sampleByKey()</code> : 근사치/정확도로 RDD 샘플 생성</p><ul><li>특정 키를 부분 샘플링 가능</li><li><code>sampleByKeyExtract()</code> : 99% 신뢰도를 가진 모든 키 값에 대해 RDD 추가 처리</li><li><code>sampleByKey</code> vs <code>sampleByKeyExtract</code><ul><li><code>sum(math.ceil(numItems * samplingRate))</code> 과 ‘거의’ 동일한 크기냐, ‘완전히’ 동일한 크기의 샘플을 만드느냐의 차이 </li><li>(.. 이게 무슨말이지..? =&gt; <a href="https://spark.apache.org/docs/2.2.0/api/scala/index.html#org.apache.spark.rdd.PairRDDFunctions">API docs</a> 참고)</li></ul></li><li>선택적으로 비복원 추출 사용 가능<ul><li>비복원 추출 사용 시 =&gt; 샘플 크기 보장을 위해 RDD 한번 더 통과</li><li>복원 추출 =&gt; RDD 두번 더 통과</li></ul></li></ul></li></ul><h3 id="13-2-집계"><a href="#13-2-집계" class="headerlink" title="13.2 집계"></a>13.2 집계</h3><ul><li><p>사용하는 메서드에 따라 <strong>일반 RDD</strong> or <strong>PairRDD</strong> 사용</p></li><li><p><code>countByKey()</code> : 각 키의 아이템 수 구하고 + 로컬 맵으로 결과 수집</p><ul><li>Scala, Java 사용 시 =&gt; 제한 시간(timeout), 신뢰도 인수로 지정하여 근사치 구하기 가능 (=<code>countByApprox</code>)</li></ul></li><li><p>집계 연산 구현 방식 이해하기</p><ul><li>PairRDD (키-값 형태) 생성을 위한 구현 방식은 중요 (for 잡의 안정성)</li><li><code>groupBy</code> vs <code>reduce</code> 구현 방식 비교 (동일한 기본 원칙)<ul><li>예제 - 각 키의 총 레코드 수 구하기</li><li><code>groupByKey().map()</code> : 모든 익스큐터에서 함수 적용 전에 해당 키와 관련된 <strong>모든 값을 메모리로</strong> 읽음 (=&gt; 파티션 쏠림 현상 시 OOM 발생 가능성)</li><li><code>reduceByKey()</code> : 각 파티션에서 리듀스 작업 수행하고, 최종 리듀스 외 모든 작업은 개별 워커에서 처리 (연산 중 셔플 X) . 모든 값 메모리 유지 필요 없음</li></ul></li><li><code>groupByKey()</code><ul><li>각 키에 대한 값의 크기가 일정하고, 익스큐터에 할당된 메모리에서 처리 가능한 정도의 크기일 경우에만 사용</li><li>결과 순서 보장 O</li></ul></li><li><code>reduceByKey()</code><ul><li>키별 그룹 RDD 반환 (개별요소 정렬X) =&gt; 결과의 순서가 중요한 경우에는 비적합</li><li>안정성, 연산수행속도 빠름. 작업 부하 감소에 good</li></ul></li></ul></li><li><p>기타 집계 메서드</p><ul><li>구조적 API는 훨씬 간단하게 집계 가능 (권장)<ul><li>저수준 사용시, 사용자 워크로드에 따라 세부 구현 방법에 차이 존재</li><li>그러나 아주 구체적이고 매우 세밀한 제어 가능</li></ul></li><li><code>aggregate(시작값)(func1, func2)</code><ul><li>null or 집계 시작값 필요 (두 함수 모두 시작값 사용)</li><li>func1 은 파티션 내에서 수행, func2는 모든 파티션에 걸쳐 수행</li><li><code>aggregate</code> 는 드라이버에서 최종 집계<ul><li>=&gt; 성능에 영향 有 (익스큐터 결과가 크면 OOM 발생가능성)</li></ul></li><li><code>treeAggregate()</code> 는 드라이버 최종 집계 전 익스큐터끼리 형성한 트리로 집계 처리 일부 하위 과정을 ‘push down’ 방식으로 먼저 수행<ul><li>집계 처리를 여러 단계로 구성 (메모리 전체 소비 방지) =&gt; 안정적</li></ul></li></ul></li><li><code>aggregateByKey(시작값)(func1, func2)</code><ul><li>aggregate와 동일. 단 파티션 대신 <strong>키 기준</strong>으로 연산 수행</li></ul></li><li><code>combineByKey(컴바이너, func1, func2, (파티션 수))</code><ul><li>집계 함수대신 ‘컴바이너’ 사용</li><li><strong>컴바이너(combiner)</strong> : 키 기준으로 연산 수행 + 파라미터의 함수로 값 병합 + 여러 컴바이너 값을 병합한 결과 반환</li><li>사용자 정의 파티셔너로 출력 파티션 수 지정 가능</li></ul></li><li><code>foldByKey(제로값, func)</code><ul><li>결합 함수와 항등원인 ‘제로값’ 으로 각 키의 값 병합</li><li><strong>제로값</strong>은 여러번 사용될 수 있으나 결과 값을 변경할 수 없는 수 (ex. 덧셈의 0, 곱셈의 1)</li></ul></li></ul></li></ul><h3 id="13-3-cogroup"><a href="#13-3-cogroup" class="headerlink" title="13.3 cogroup"></a>13.3 cogroup</h3><ul><li><code>cogroup()</code><ul><li>RDD에 대한 그룹 기반의 조인 수행<ul><li>스칼라는 최대 3개, 파이썬은 최대 2개의 키-값 형태 RDD 그룹화 가능</li><li>각 키 기준으로 값 결합</li></ul></li><li>사용자 정의 파티션 함수 파라미터로 사용 가능<ul><li>=&gt; 출력 파티션 수, 클러스터에 데이터 분산 방식 정확하게 제어 가능</li></ul></li></ul></li><li>결과 =&gt; 키-값 형태의 배열 반환<ul><li>key : 그룹화된 키</li><li>value : 키와 관련된 모든 값</li></ul></li></ul><h3 id="13-4-조인"><a href="#13-4-조인" class="headerlink" title="13.4 조인"></a>13.4 조인</h3><ul><li><p>구조적 API 와 거의 동일한 조인 방식</p><ul><li>더 많은 부분에 사용자의 관여 필요</li><li>조인 대상인 두 RDD (+ 출력 파티션 수, 사용자 정의 파티션 함수)</li></ul></li><li><p>내부 조인</p><ul><li><code>RDD.join(RDD, 파티션 수)</code>로 출력 파티션 수 지정 가능</li><li>다른 조인 함수도 동일한 기본 형식 따름 (=&gt; <a href="https://minsw.github.io/2021/02/15/Spark-The-Definitive-Guide-8%EC%9E%A5/">8장</a> 참고)<ul><li><code>fullOuterJoin</code> : 외부 조인</li><li><code>leftOuterJoin</code> : 왼쪽 외부 조인</li><li><code>rightOuterJoin</code> : 오른쪽 외부 조인</li><li><code>cartesian</code> : 교차 조인 (danger⚠️)</li></ul></li></ul></li><li><p><code>zip()</code></p><ul><li>진짜 조인은 아니지만, <strong>두 RDD 결합</strong><ul><li>zipper 잠그듯..🤐  =&gt; 연결된 PairRDD 반환</li><li>한 RDD의 키 배열에 + 다른 RDD의 값이 지퍼처럼 연결</li><li>(예제로는 넘버링에 유용할 듯)</li></ul></li><li>두 RDD는 동일한 수의 요소 &amp; 파티션을 가져야함</li></ul></li></ul><h3 id="13-5-파티션-제어하기"><a href="#13-5-파티션-제어하기" class="headerlink" title="13.5 파티션 제어하기"></a>13.5 파티션 제어하기</h3><ul><li>RDD를 사용한다는건..<ul><li>=&gt; 클러스터 전체에 물리적으로 정확히 분산되는 방식 정의 가능</li><li>일부 메서드는 구조적 API 메서드와 기본적으로 동일</li><li>차이점은 <em>“<strong>파티션 함수(사용자 지정 Partitioner)를 파라미터로</strong> 사용할 수 있다는 것”</em></li></ul></li><li><code>coalesce(파티션 수)</code> :  동일한 워커에 존재하는 파티션 합침 (파티션 수 ↓)<ul><li>파티션 재분배 시 발생하는 데이터 셔플 X</li></ul></li><li><code>repartition(파티션 수)</code> : 파티션 수 증감 가능<ul><li>처리 시 노드 간 셔플 발생 가능</li><li>파티션 수 ↑ =&gt; 맵, 필터 타입 연산 시 병렬 처리 수준 ↑</li></ul></li><li><code>repartitionAndSortWithinPartitions(파티셔너)</code> : 파티션 재분배 &amp; 결과 파티션 정렬 방식 지정 가능<ul><li>파티셔닝, 키 비교 모두 사용자 지정 가능</li><li><a href="https://bit.ly/2NCHCOH">API docs</a> 참고</li></ul></li></ul><h4 id="사용자-정의-파티셔닝"><a href="#사용자-정의-파티셔닝" class="headerlink" title="사용자 정의 파티셔닝"></a>사용자 정의 파티셔닝</h4><ul><li><strong>사용자 정의 파티셔닝 (custom partitioning)</strong><ul><li>RDD를 사용하는 가장 큰 이유 중 하나<ul><li>저수준 API의 세부적인 구현 방식</li><li>구조적 API에서는 사용 불가 (논리적 대응책 X)</li></ul></li><li>잡이 성공적으로 동작되는지 여부에 상당한 영향<ul><li>ex. 페이지랭크(PageRank) : 사용자 정의 파티셔닝 → 클러스터의 데이터 배치 구조 제어 및 셔플 회피</li></ul></li><li>목표 : <strong>데이터 치우침(skew)</strong> 문제 회피를 위한 데이터 균등 분배</li></ul></li><li>구조적 API + RDD 장점 같이 활용하는 법<ul><li>구조적 API로 RDD 얻기</li><li>=&gt; 사용자 정의 파티셔너 적용</li><li>=&gt; 다시 DataFrame/Dataset 으로 변환</li></ul></li><li>How to use?<ul><li>Partitioner 확장 클래스 구현 <i style="color:lightgray">(아 자신있으면 쓰라고 ㅋㅋ)</i></li><li>단일 값, 다수 값(다수 컬럼) 파티셔닝 시 =&gt; <U>DataFrame API</U> 사용 권장</li></ul></li><li>RDD, 구조적 API 모두 사용 가능한 <strong>내장형 파티셔너</strong> (기초적 기능 제공)<ul><li><code>HashPartitioner</code> : 이산형 값</li><li><code>RangePartitioner</code> : 연속형 값</li></ul></li><li>매우 큰 데이터나 심각하게 치우친 키를 다룰 경우 고급 파티셔닝 기능 필요 (=&gt; 키 치우침)<ul><li><strong>키 치우침</strong> : 어떤 키가 다른 키에 비해 아주 많은 데이터를 가지는 현상<ul><li>=&gt; 최대한 키 분할 필요 (병렬성 개선 + OOM 방지)</li></ul></li><li>키 분할이 필요한 예 : 키가 특정한 형태를 띠는 경우 (예제 참고)<ul><li><em>“우스꽝스러운 예제일 수 있지만, 실무에서 비슷한 상황 만날지도 모릅니다”</em></li></ul></li></ul></li><li>이러한 <strong>사용자 정의 키 분배로직</strong>은 RDD 수준에서만 사용 가능<ul><li>It’s 임의의 로직을 사용해 물리적인 방식으로 클러스터에 데이터를 분배하는 강력한 방법</li></ul></li></ul><details><summary class="point-color-can-hover">[13.5] 사용자 정의 키 분배로직 예제 펼치기</summary><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.apache.spark.<span class="type">Partitioner</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 분석 복잡도를 높이는 두 고객(17850, 12583) 과 다른 고객 정보 분리</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DomainPartitioner</span> <span class="keyword">extends</span> <span class="title">Partitioner</span> </span>&#123;</span><br><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">numPartitions</span> </span>= <span class="number">3</span></span><br><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">getPartition</span></span>(key: <span class="type">Any</span>): <span class="type">Int</span> = &#123;</span><br><span class="line">   <span class="keyword">val</span> customerId = key.asInstanceOf[<span class="type">Double</span>].toInt</span><br><span class="line">   <span class="keyword">if</span> (customerId == <span class="number">17850.0</span> || customerId == <span class="number">12583.0</span>) &#123;</span><br><span class="line">     <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     <span class="keyword">return</span> <span class="keyword">new</span> java.util.<span class="type">Random</span>().nextInt(<span class="number">2</span>) + <span class="number">1</span></span><br><span class="line">   &#125;</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 각 파티션 수 확인</span></span><br><span class="line"><span class="comment">// (두 고객은 partition 0에, 나머지 고객들은 남은 partition 1, 2에 분산)</span></span><br><span class="line">(keyedRDD</span><br><span class="line">  .partitionBy(<span class="keyword">new</span> <span class="type">DomainPartitioner</span>).map(_._1).glom().map(_.toSet.toSeq.length)</span><br><span class="line">  .take(<span class="number">5</span>))</span><br><span class="line"><span class="comment">// res83: Array[Int] = Array(2, 4290, 4304)</span></span><br></pre></td></tr></table></figure><blockquote><ul><li><code>glom()</code> : 각 파티션의 모든 요소를 배열 하나로 모으고, 이 배열들을 요소로 포함하는 새로운 RDD를 반환</li></ul><p>(ref. <a href="https://thebook.io/006908/part01/ch04/02/04/02/">https://thebook.io/006908/part01/ch04/02/04/02/</a>)</p></blockquote></details><h3 id="13-6-사용자-정의-직렬화"><a href="#13-6-사용자-정의-직렬화" class="headerlink" title="13.6 사용자 정의 직렬화"></a>13.6 사용자 정의 직렬화</h3><ul><li><strong>Kryo 직렬화</strong><ul><li>병렬화 대상인 모든 객체나 함수는 직렬화 가능해야함</li></ul></li><li>“빠르다!”<ul><li>기본 직렬화 기능은 매우 느릴 수 있음</li><li>스파크는 Kryo 라이브러리 (ver. 2) 사용 =&gt; <strong>더 빠른 직렬화</strong> (자바보다 성능 10배 이상 ↑, 간결)</li></ul></li><li>단점<ul><li>모든 직렬화 유형 지원 X</li><li>최상의 성능을 위해서는 사용할 클래스 사전에 등록 필요</li></ul></li><li>How to use ?<ul><li>SparkConf 로 잡 초기화 시점에서 지정<ul><li><code>spark.serializer = org.apache.spark.serializer.KryoSerializer</code></li><li>Kryo 자세한 내용은 4부 에서</li></ul></li><li><code>spark.serializer</code> : 워커 노드 간 데이터 셔플링과 RDD를 직렬화해 디스크에 저장하는 용도로 사용할 시리얼라이즈 지정</li></ul></li><li>Kryo가 기본 값이 아닌 이유?<ul><li>사용자가 직접 클래스를 등록해야 하므로</li><li>네트워크에 민감한 애플리케이션에서 사용 권장</li><li>+ (since 스파크 2.0.0)<ul><li>단순 데이터 타입, 단순 데이터 타입의 배열, 문자열 데이터 타입의 RDD 셔플링 시 =&gt; 내부적으로 KryoSerializer 사용</li></ul></li></ul></li><li>클래스 등록<ul><li>스파크는 <a href="https://github.com/twitter/chill">Twitter chill 라이브러리</a> 의 <code>AllScalaRegistrar</code> 핵심 스칼라 클래스를 자동으로 KryoSerializer 에 등록</li><li>사용자 정의 클래스 등록하려면? =&gt;<code>registerKyroClasses()</code> 사용</li></ul></li></ul><h3 id="13-7-정리"><a href="#13-7-정리" class="headerlink" title="13.7 정리"></a>13.7 정리</h3><ul><li>RDD의 여러 고급 주제들</li><li>특히 <a href="#%EC%82%AC%EC%9A%A9%EC%9E%90-%EC%A0%95%EC%9D%98-%ED%8C%8C%ED%8B%B0%EC%85%94%EB%8B%9D">‘사용자 정의 파티셔닝’ [13.5.4]</a> 주목</li></ul><h3 id="📒-단어장"><a href="#📒-단어장" class="headerlink" title="📒 단어장"></a>📒 단어장</h3><ul><li>항등원 (neutral) : 어떤 원소와 연산을 취해도 자기 자신이 되게하는 원소. (= neutral value = identity element)</li><li>이산형 값 (discrete variable) : 값을 하나 하나 셀 수 있는 (=이산) 변수 (Like 정수)</li><li>연속형 값 (continuous variable) : 구간 내 모든 값을 가질 수 있는 변수 (Like 실수) </li></ul>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;br/&gt;
+
+&lt;p&gt;RDD 쓰지 말래매…&lt;br&gt;자꾸 왜 이렇게 뭘 자세하게 알려주려고 하는데… 😔&lt;/p&gt;
+&lt;img alt=&quot;class&quot; src=&quot;https://user-images.githubusercontent.com/26691216/11116126</summary>
+      
+    
+    
+    
+    <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
+    
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
+    
+    <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
+    
+    <category term="apache" scheme="https://minsw.github.io/tags/apache/"/>
+    
+  </entry>
   
   <entry>
     <title>&amp;#039;Spark The Definitive Guide&amp;#039; 12장 - RDD</title>
@@ -468,15 +501,15 @@
     
     <category term="naver" scheme="https://minsw.github.io/tags/naver/"/>
     
-    <category term="kafka" scheme="https://minsw.github.io/tags/kafka/"/>
-    
-    <category term="kubernetes" scheme="https://minsw.github.io/tags/kubernetes/"/>
-    
     <category term="internship" scheme="https://minsw.github.io/tags/internship/"/>
     
     <category term="engineeringday" scheme="https://minsw.github.io/tags/engineeringday/"/>
     
+    <category term="kubernetes" scheme="https://minsw.github.io/tags/kubernetes/"/>
+    
     <category term="hpa" scheme="https://minsw.github.io/tags/hpa/"/>
+    
+    <category term="kafka" scheme="https://minsw.github.io/tags/kafka/"/>
     
   </entry>
   
@@ -537,11 +570,11 @@
     
     <category term="naver" scheme="https://minsw.github.io/tags/naver/"/>
     
+    <category term="kafka" scheme="https://minsw.github.io/tags/kafka/"/>
+    
     <category term="hackathon" scheme="https://minsw.github.io/tags/hackathon/"/>
     
     <category term="container" scheme="https://minsw.github.io/tags/container/"/>
-    
-    <category term="kafka" scheme="https://minsw.github.io/tags/kafka/"/>
     
     <category term="CNCF" scheme="https://minsw.github.io/tags/CNCF/"/>
     
@@ -567,13 +600,13 @@
     <category term="kubernetes" scheme="https://minsw.github.io/categories/kubernetes/"/>
     
     
+    <category term="kubernetes" scheme="https://minsw.github.io/tags/kubernetes/"/>
+    
     <category term="container" scheme="https://minsw.github.io/tags/container/"/>
     
     <category term="CNCF" scheme="https://minsw.github.io/tags/CNCF/"/>
     
     <category term="mwolkka" scheme="https://minsw.github.io/tags/mwolkka/"/>
-    
-    <category term="kubernetes" scheme="https://minsw.github.io/tags/kubernetes/"/>
     
     <category term="k8s" scheme="https://minsw.github.io/tags/k8s/"/>
     
