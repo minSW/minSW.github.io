@@ -501,6 +501,8 @@
     
     <category term="naver" scheme="https://minsw.github.io/tags/naver/"/>
     
+    <category term="kafka" scheme="https://minsw.github.io/tags/kafka/"/>
+    
     <category term="internship" scheme="https://minsw.github.io/tags/internship/"/>
     
     <category term="engineeringday" scheme="https://minsw.github.io/tags/engineeringday/"/>
@@ -508,8 +510,6 @@
     <category term="kubernetes" scheme="https://minsw.github.io/tags/kubernetes/"/>
     
     <category term="hpa" scheme="https://minsw.github.io/tags/hpa/"/>
-    
-    <category term="kafka" scheme="https://minsw.github.io/tags/kafka/"/>
     
   </entry>
   
@@ -570,11 +570,11 @@
     
     <category term="naver" scheme="https://minsw.github.io/tags/naver/"/>
     
-    <category term="kafka" scheme="https://minsw.github.io/tags/kafka/"/>
-    
     <category term="hackathon" scheme="https://minsw.github.io/tags/hackathon/"/>
     
     <category term="container" scheme="https://minsw.github.io/tags/container/"/>
+    
+    <category term="kafka" scheme="https://minsw.github.io/tags/kafka/"/>
     
     <category term="CNCF" scheme="https://minsw.github.io/tags/CNCF/"/>
     
@@ -600,11 +600,11 @@
     <category term="kubernetes" scheme="https://minsw.github.io/categories/kubernetes/"/>
     
     
-    <category term="kubernetes" scheme="https://minsw.github.io/tags/kubernetes/"/>
-    
     <category term="container" scheme="https://minsw.github.io/tags/container/"/>
     
     <category term="CNCF" scheme="https://minsw.github.io/tags/CNCF/"/>
+    
+    <category term="kubernetes" scheme="https://minsw.github.io/tags/kubernetes/"/>
     
     <category term="mwolkka" scheme="https://minsw.github.io/tags/mwolkka/"/>
     
