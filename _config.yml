@@ -5,7 +5,7 @@
 # Site
 title: Look out
 subtitle:
-description:
+description: 민루까의 블로그
 keywords:
 author: Lukka Min
 language: ko
@@ -17,6 +17,7 @@ url: https://minsw.github.io/
 root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
+image: https://minsw.github.io/images/og_image.png
 
 # Directory
 source_dir: source
