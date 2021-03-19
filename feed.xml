@@ -6,7 +6,7 @@
   <link href="https://minsw.github.io/feed.xml" rel="self"/>
   
   <link href="https://minsw.github.io/"/>
-  <updated>2021-03-15T17:29:17.190Z</updated>
+  <updated>2021-03-19T18:35:01.780Z</updated>
   <id>https://minsw.github.io/</id>
   
   <author>
@@ -15,6 +15,39 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>&amp;#039;Spark The Definitive Guide&amp;#039; 14장 - 분산형 공유 변수 (PART 3 끝)</title>
+    <link href="https://minsw.github.io/2021/03/20/Spark-The-Definitive-Guide-14%EC%9E%A5/"/>
+    <id>https://minsw.github.io/2021/03/20/Spark-The-Definitive-Guide-14%EC%9E%A5/</id>
+    <published>2021-03-19T16:02:00.000Z</published>
+    <updated>2021-03-19T18:35:01.780Z</updated>
+    
+    <content type="html"><![CDATA[<br/><h4 id="Part-3-END"><a href="#Part-3-END" class="headerlink" title="[Part 3] END"></a>[Part 3] END</h4><blockquote><p><em><a href="https://minsw.github.io/2021/01/20/Spark-The-Definitive-Guide-1%EC%9E%A5/">“… 완벽 가이드라니까 일단 파트 3까지는 아묻따 따라가보자.”</a></em></p></blockquote><p>마침내 🎈약속의 파트 쓰리! 🎈   🙌🏻<br>빠르지는 않았지만 꾸준함에 의미를 두고 싶다.</p><p>스파크 너란 녀석.. 이젠 뭔지 조금은 알지도…?<br><i style="color:lightgray">( 『5252.. 이제부턴 ‘실전’이다ㅡ 』 )</i></p><img alt="dooly" src="https://user-images.githubusercontent.com/26691216/111810920-dd9a5980-8919-11eb-8d2d-2b26434a01ae.jpg" width=300/><center style="color:lightgray">선 넘네..</center><br/><center><h2>_ _ _</h2></center><br/><hr><h1 id="CHAPTER-14-분산형-공유-변수"><a href="#CHAPTER-14-분산형-공유-변수" class="headerlink" title="CHAPTER 14 분산형 공유 변수"></a>CHAPTER 14 분산형 공유 변수</h1><p>스파크의 저수준 API의 두 번째 유형, <strong>‘분산형 공유 변수’</strong><br>분산형 공유 변수 타입이 만들어지게 된 계기, 사용 방법 소개</p><ul><li>클러스터 실행 시 특별한 속성을 가진 사용자 정의함수 (ex. RDD, DataFrame을 다루는 map 함수)에서 사용 가능</li><li>분산형 공유 변수의 2가지 타입 : <strong>브로드캐스트 변수</strong>, <strong>어큐뮬레이터</strong></li></ul><h3 id="14-1-브로드캐스트-변수"><a href="#14-1-브로드캐스트-변수" class="headerlink" title="14.1 브로드캐스트 변수"></a>14.1 브로드캐스트 변수</h3><blockquote><p>브로드캐스트 변수는 <strong>모든 워커노드에 큰 값 저장</strong> =&gt; 재 전송 없이 많은 스파크 액션에서 재사용 가능</p></blockquote><img width="400" alt="bv" src="https://user-images.githubusercontent.com/26691216/111816566-543a5580-8920-11eb-88eb-ba873e1384fc.png"><ul><li><p><strong>브로드캐스트 변수</strong></p><ul><li>변하지 않는 값(불변성 값)을 클로저(closure) 함수의 변수로 캡슐화하지 않고, 클러스터에서 효율적으로 공유하는 방법 제공</li></ul></li><li><p>(1) 태스크에서 드라이버 노드의 변수 사용 시 <U>클로저 함수 내부에서 단순 참조</U></p><ul><li>=&gt; <strong>비효율적</strong>. 특히 큰 변수 사용시 (ex. 룩업 데테이블, 머신러닝 모델)<ul><li>Why?</li><li>클로저 함수에서 변수 사용 시 =&gt; 워커 노드에서 여러 번 (태스크당 한번) 역직렬화 발생</li><li>여러 스파크 액션과 잡에서 동일 변수 사용시 =&gt; 잡 실행 때마다 워커로 큰 변수 재전송</li></ul></li><li>그러면 어떻게 하나?<ul><li>=&gt; <U><strong>브로드캐스트 변수 사용</strong>해라!</U></li></ul></li></ul></li><li><p>(2) 브로드 캐스트 변수 사용 시</p><ul><li>모든 태스크마다 직렬화 X =&gt; <strong>클러스터의 모든 머신에 캐시하는 불변성 공유 변수</strong></li><li>익스큐터 메모리에 맞는 조회용 테이블을 전달하고 함수에서 사용</li></ul></li><li><p>How to use ?</p><ul><li><code>spark.sparkContext.broadcast()</code> 로 참조 (= 불변성 값)<ul><li>액션을 실행할때 클러스터 모든 노드에 지연 처리 방식으로 복제됨</li></ul></li><li><code>value</code> 메서드로 브로드캐스트된 값 참조 가능<ul><li>직렬화된 함수에서 브로드캐스트된 데이터를 직렬화 하지않아도 접근 가능</li><li>데이터를 보다 효율적으로 전송. <strong>직렬화/역직렬화 부하 ↓</strong></li></ul></li></ul></li><li><p>클로저에 담아 전달 vs 브로드캐스트 변수 사용</p><ul><li>말해뭐해. <strong>브로드캐스트 변수가 훨씬 더 효율적</strong><ul><li>데이터 총량, 익스큐터에 따라 다를 수는 있지만.. (작은 데이터를 작은 클러스터에서 돌릴 땐 별 차이 X)</li></ul></li><li>브로드캐스트 변수에 작은 크기의 딕셔너리(dictionary) 타입 사용 시 부하 크게 발생 X (?)<ul><li>훨씬 큰 크기 데이터 사용 시 전체 데이터 직렬화 시 발생 부하 커질 수도</li></ul></li></ul></li><li><p>RDD 영역에서 브로드캐스트 변수 사용 (UDF, Dataset도 사용 가능. 동일 효과)</p></li></ul><details><summary class="point-color-can-hover">[14.1] '브로드캐스트 변수' 예제 펼치기 </summary><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// &#x27;단어의 값과 목록 + 수 KB~GB 크기를 가지는 다른 정보&#x27; 브로드캐스트 후 RDD로 변환하는 예제</span></span><br><span class="line"><span class="keyword">val</span> myCollection = (<span class="string">&quot;Spark The Definitive Guide : Big Data Processing Made Simple&quot;</span></span><br><span class="line">  .split(<span class="string">&quot; &quot;</span>))</span><br><span class="line"><span class="keyword">val</span> words = spark.sparkContext.parallelize(myCollection, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// (== SQL Right JOIN)</span></span><br><span class="line"><span class="keyword">val</span> supplementalData = <span class="type">Map</span>(<span class="string">&quot;Spark&quot;</span> -&gt; <span class="number">1000</span>, <span class="string">&quot;Definitive&quot;</span> -&gt; <span class="number">200</span>,</span><br><span class="line">                           <span class="string">&quot;Big&quot;</span> -&gt; <span class="number">-300</span>, <span class="string">&quot;Simple&quot;</span> -&gt; <span class="number">100</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 해당 구조체 브로드캐스트 =&gt; suppBroadcast 변수로 참조 가능 (불변)</span></span><br><span class="line"><span class="keyword">val</span> suppBroadcast = spark.sparkContext.broadcast(supplementalData)</span><br><span class="line"><span class="comment">// suppBroadcast: org.apache.spark.broadcast.Broadcast[scala.collection.immutable.Map[String,Int]] = Broadcast(0)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// value 메서드로 직렬화 하지 않아도 접근 가능</span></span><br><span class="line">suppBroadcast.value</span><br><span class="line"><span class="comment">// res11: scala.collection.immutable.Map[String,Int] = Map(Spark -&gt; 1000, Definitive -&gt; 200, Big -&gt; -300, Simple -&gt; 100)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 브로드캐스트된 데이터로 키-값 RDD 변환 가능 (+ 값 없을 시 0 으로 처리)</span></span><br><span class="line">(words.map(word =&gt; (word, suppBroadcast.value.getOrElse(word, <span class="number">0</span>)))</span><br><span class="line">  .sortBy(wordPair =&gt; wordPair._2)</span><br><span class="line">  .collect())</span><br><span class="line"><span class="comment">// res14: Array[(String, Int)] = Array((Big,-300), (The,0), (Guide,0), (:,0), (Data,0), (Processing,0), (Made,0), (Simple,100), (Definitive,200), (Spark,1000))</span></span><br></pre></td></tr></table></figure></details><h3 id="14-2-어큐뮬레이터"><a href="#14-2-어큐뮬레이터" class="headerlink" title="14.2 어큐뮬레이터"></a>14.2 어큐뮬레이터</h3><blockquote><p>어큐뮬레이터는 <strong>모든 태스크 데이터를 공유 결과에 추가 가능</strong> (ex. 잡의 입력 레코드 파싱하면서 오류 발생 확인 카운터 구현 가능)</p></blockquote><img width="400" alt="av" src="https://user-images.githubusercontent.com/26691216/111816573-569caf80-8920-11eb-8906-13a25b3707d1.png"><ul><li><p><strong>어큐뮬레이터</strong></p><ul><li>트랜스포메이션 내부의 다양한 값 갱신하는데 사용</li><li>내고장성 보장 + 효율적인 방식으로 드라이버에 값 전달 가능</li></ul></li><li><p>어큐뮬레이터는 스파크 클러스터에서 <U>로우 단위로 안전하게 값을 갱신할 수 있는 변경 가능한 변수</U> 제공</p><ul><li><strong>디버깅용, 저수준 집계 생성용</strong>으로 사용 가능 (ex. 파티션별로 특정 변수 값 추적 용도)</li><li>결합성, 가환성을 가진 연산을 통해서만 더할 수 있는 변수 =&gt; 병렬 처리 과정에서 효율적 사용 가능</li><li>카운터(==맵리듀스의 카운터)나 합계 구하는 용도로 사용 가능</li></ul></li><li><p>스파크는 기본적으로 수치형 어큐뮬레이터 지원. 사용자 정의 어큐뮬레이터 만들어서 사용도 OK</p></li><li><p>어큐뮬레이터의 값은 <strong>액션</strong> 처리 과정에서만 갱신됨</p><ul><li>스파크는 <U><strong>각 태스크에서 어큐뮬레이터를 한 번만 갱신</strong></U>하도록 제어 (재시작한 태스크는 갱신X)</li><li>트랜스포메이션에서 태스크 or 잡 스테이지 재처리 시? =&gt; 각 태스크 갱신 작업이 두 번 이상 적용될 수도</li></ul></li><li><p>어큐뮬레이터는 스파크의 지연 연산 모델에 영향 X</p><ul><li>어큐뮬레이터가 RDD 처리 중 갱신되면? =&gt; RDD 연산이 실제로 수행된 지점에 딱 한번만 값 갱신  (해당 or 부모 RDD에 액션을 실행하는 시점)</li><li>지연 처리 형태의 트랜스포메이션 (ex. <code>map()</code>) 에서 어큐뮬레이터 갱신 작업 수행시? =&gt; 실제 실행 전까지는 갱신 X</li></ul></li><li><p>어큐뮬레이터 이름은 선택적 지정 가능</p><ul><li>생성 시 파리미터로 이름을 붙이거나 <code>spark.sparkContext.register(어큐뮬레이터, 이름)</code> 사용</li><li>이름이 지정된 (named) 어큐뮬레이터의 실행결과는 스파크 UI에 표시</li><li>이름이 지정되지 않은 어큐뮬레이터는 표시 X</li></ul></li><li><p><strong>사용자 정의 어큐뮬레이터</strong></p><ul><li>어큐뮬레이터 직접 정의 시 =&gt; <code>AccumulatorV2</code> 클래스 상속하여 구현</li><li>파이썬 사용 시 <a href="https://bit.ly/2x7RnL7">AccumulatorParam</a> 상속</li></ul></li></ul><details><summary class="point-color-can-hover">[14.2.1] '어큐뮬레이터' 예제 펼치기 </summary><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Dataset API 사용 (RDD API X)</span></span><br><span class="line"><span class="comment">// 출발지나 도착지가 중국인 항공편의 수를 구하는 어큐뮬레이터 생성하기 예제</span></span><br><span class="line"><span class="keyword">case</span> <span class="class"><span class="keyword">class</span> <span class="title">Flight</span>(<span class="params"><span class="type">DEST_COUNTRY_NAME</span>: <span class="type">String</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">                  <span class="type">ORIGIN_COUNTRY_NAME</span>: <span class="type">String</span>, count: <span class="type">BigInt</span></span>)</span></span><br><span class="line"><span class="class"><span class="title">val</span> <span class="title">flights</span> </span>= (spark.read</span><br><span class="line">  .parquet(<span class="string">&quot;/data/flight-data/parquet/2010-summary.parquet&quot;</span>)</span><br><span class="line">  .as[<span class="type">Flight</span>])</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.apache.spark.util.<span class="type">LongAccumulator</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 이름이 지정되지 않은 어큐뮬레이터 생성</span></span><br><span class="line"><span class="keyword">val</span> accUnnamed = <span class="keyword">new</span> <span class="type">LongAccumulator</span></span><br><span class="line"><span class="keyword">val</span> acc = spark.sparkContext.register(accUnnamed)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 이름이 지정된 어큐뮬레이터 생성</span></span><br><span class="line"><span class="keyword">val</span> accChina = <span class="keyword">new</span> <span class="type">LongAccumulator</span></span><br><span class="line"><span class="keyword">val</span> accChina2 = spark.sparkContext.longAccumulator(<span class="string">&quot;China&quot;</span>)</span><br><span class="line">spark.sparkContext.register(accChina, <span class="string">&quot;China&quot;</span>)<span class="comment">// register() 로 이름 지정 가능</span></span><br><span class="line"><span class="comment">// accChina: org.apache.spark.util.LongAccumulator = Un-registered Accumulator: LongAccumulator</span></span><br><span class="line"><span class="comment">// accChina2: org.apache.spark.util.LongAccumulator = LongAccumulator(id: 101, name: Some(China), value: 0)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 어큐뮬레이터에 값 더하는 방법 정의</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">accChinaFunc</span></span>(flight_row: <span class="type">Flight</span>) = &#123;</span><br><span class="line">  <span class="keyword">val</span> destination = flight_row.<span class="type">DEST_COUNTRY_NAME</span></span><br><span class="line">  <span class="keyword">val</span> origin = flight_row.<span class="type">ORIGIN_COUNTRY_NAME</span></span><br><span class="line">  <span class="keyword">if</span> (destination == <span class="string">&quot;China&quot;</span>) &#123;</span><br><span class="line">    accChina.add(flight_row.count.toLong)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (origin == <span class="string">&quot;China&quot;</span>) &#123;</span><br><span class="line">    accChina.add(flight_row.count.toLong)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// foreach() 는 액션 =&gt; DataFrame의 매 로우마다 함수 한번씩 적용 (어큐뮬레이터 갱신)</span></span><br><span class="line">flights.foreach(flight_row =&gt; accChinaFunc(flight_row))</span><br><span class="line"></span><br><span class="line">accChina.value <span class="comment">// 953</span></span><br></pre></td></tr></table></figure><blockquote><p>Spark UI (이름이 지정된 어큐뮬레이터)</p></blockquote><img width="400" alt="china-result" src="https://user-images.githubusercontent.com/26691216/111823196-00336f00-8928-11eb-93b4-14ae1c731ab2.png"></details><details><summary class="point-color-can-hover">[14.2.2] 사용자 정의 어큐뮬레이터 구현 예제 펼치기 </summary><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 사용자 정의 어큐뮬레이터 (AccumulatorV2 상속 클래스 구현)</span></span><br><span class="line"><span class="keyword">import</span> scala.collection.mutable.<span class="type">ArrayBuffer</span></span><br><span class="line"><span class="keyword">import</span> org.apache.spark.util.<span class="type">AccumulatorV2</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> arr = <span class="type">ArrayBuffer</span>[<span class="type">BigInt</span>]()</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">EvenAccumulator</span> <span class="keyword">extends</span> <span class="title">org</span>.<span class="title">apache</span>.<span class="title">spark</span>.<span class="title">util</span>.<span class="title">AccumulatorV2</span>[<span class="type">BigInt</span>, <span class="type">BigInt</span>] </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">var</span> num:<span class="type">BigInt</span> = <span class="number">0</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">reset</span></span>(): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">this</span>.num = <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(intValue: <span class="type">BigInt</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">if</span> (intValue % <span class="number">2</span> == <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="keyword">this</span>.num += intValue</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">merge</span></span>(other: <span class="type">AccumulatorV2</span>[<span class="type">BigInt</span>,<span class="type">BigInt</span>]): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">this</span>.num += other.value</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">value</span></span>():<span class="type">BigInt</span> = &#123;</span><br><span class="line">    <span class="keyword">this</span>.num</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">copy</span></span>(): <span class="type">AccumulatorV2</span>[<span class="type">BigInt</span>,<span class="type">BigInt</span>] = &#123;</span><br><span class="line">    <span class="keyword">new</span> <span class="type">EvenAccumulator</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">isZero</span></span>():<span class="type">Boolean</span> = &#123;</span><br><span class="line">    <span class="keyword">this</span>.num == <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">val</span> acc = <span class="keyword">new</span> <span class="type">EvenAccumulator</span></span><br><span class="line"><span class="keyword">val</span> newAcc = sc.register(acc, <span class="string">&quot;evenAcc&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">acc.value <span class="comment">// 0</span></span><br><span class="line">flights.foreach(flight_row =&gt; acc.add(flight_row.count))</span><br><span class="line">acc.value <span class="comment">// 31390</span></span><br></pre></td></tr></table></figure></details><h3 id="14-3-정리"><a href="#14-3-정리" class="headerlink" title="14.3 정리"></a>14.3 정리</h3><ul><li>분산형 공유 변수 (브로드캐스트 변수, 어큐뮬레이터)</li><li>분산형 공유 변수는 디버깅이나 최적화 작업에 유용한 도구</li></ul><h3 id="📒-단어장"><a href="#📒-단어장" class="headerlink" title="📒 단어장"></a>📒 단어장</h3><ul><li>내고장성 (Fault tolerance) : 시스템 일부에 문제가 발생하여도 정상 동작이 가능한 </li><li>결합성 (Associative) : 둘 이상의 이항연산 중첩시, 연산 결과가 순서에 관계없이 동일<blockquote><p><em>(a+b)+c = a+(b+c) = a+b+c</em></p></blockquote></li><li>가환성 (Commutative) : 연산 결과가 순서에 관계없이 동일 (=&gt; <a href="https://minsw.github.io/2021/01/24/Spark-The-Definitive-Guide-2%EC%9E%A5/#%F0%9F%93%92-%EB%8B%A8%EC%96%B4%EC%9E%A5">2장 단어장</a>)<blockquote><p><em>a+b = b+a</em></p></blockquote></li></ul>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;br/&gt;
+
+&lt;h4 id=&quot;Part-3-END&quot;&gt;&lt;a href=&quot;#Part-3-END&quot; class=&quot;headerlink&quot; title=&quot;[Part 3] END&quot;&gt;&lt;/a&gt;[Part 3] END&lt;/h4&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;&lt;a href=&quot;h</summary>
+      
+    
+    
+    
+    <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
+    
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
+    
+    <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
+    
+    <category term="apache" scheme="https://minsw.github.io/tags/apache/"/>
+    
+  </entry>
   
   <entry>
     <title>&amp;#039;Spark The Definitive Guide&amp;#039; 13장 - RDD 심화반</title>
@@ -432,13 +465,13 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
+    <category term="mwolkka" scheme="https://minsw.github.io/tags/mwolkka/"/>
+    
     <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
     
     <category term="summarization" scheme="https://minsw.github.io/tags/summarization/"/>
-    
-    <category term="mwolkka" scheme="https://minsw.github.io/tags/mwolkka/"/>
     
     <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
     
@@ -501,8 +534,6 @@
     
     <category term="naver" scheme="https://minsw.github.io/tags/naver/"/>
     
-    <category term="kafka" scheme="https://minsw.github.io/tags/kafka/"/>
-    
     <category term="internship" scheme="https://minsw.github.io/tags/internship/"/>
     
     <category term="engineeringday" scheme="https://minsw.github.io/tags/engineeringday/"/>
@@ -510,6 +541,8 @@
     <category term="kubernetes" scheme="https://minsw.github.io/tags/kubernetes/"/>
     
     <category term="hpa" scheme="https://minsw.github.io/tags/hpa/"/>
+    
+    <category term="kafka" scheme="https://minsw.github.io/tags/kafka/"/>
     
   </entry>
   
@@ -535,6 +568,8 @@
     <category term="kotlin" scheme="https://minsw.github.io/categories/kotlin/"/>
     
     
+    <category term="mwolkka" scheme="https://minsw.github.io/tags/mwolkka/"/>
+    
     <category term="kotlin" scheme="https://minsw.github.io/tags/kotlin/"/>
     
     <category term="study" scheme="https://minsw.github.io/tags/study/"/>
@@ -542,8 +577,6 @@
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
     
     <category term="summarization" scheme="https://minsw.github.io/tags/summarization/"/>
-    
-    <category term="mwolkka" scheme="https://minsw.github.io/tags/mwolkka/"/>
     
   </entry>
   
@@ -570,11 +603,11 @@
     
     <category term="naver" scheme="https://minsw.github.io/tags/naver/"/>
     
+    <category term="kafka" scheme="https://minsw.github.io/tags/kafka/"/>
+    
     <category term="hackathon" scheme="https://minsw.github.io/tags/hackathon/"/>
     
     <category term="container" scheme="https://minsw.github.io/tags/container/"/>
-    
-    <category term="kafka" scheme="https://minsw.github.io/tags/kafka/"/>
     
     <category term="CNCF" scheme="https://minsw.github.io/tags/CNCF/"/>
     
@@ -600,15 +633,15 @@
     <category term="kubernetes" scheme="https://minsw.github.io/categories/kubernetes/"/>
     
     
+    <category term="kubernetes" scheme="https://minsw.github.io/tags/kubernetes/"/>
+    
     <category term="container" scheme="https://minsw.github.io/tags/container/"/>
     
     <category term="CNCF" scheme="https://minsw.github.io/tags/CNCF/"/>
     
-    <category term="kubernetes" scheme="https://minsw.github.io/tags/kubernetes/"/>
+    <category term="k8s" scheme="https://minsw.github.io/tags/k8s/"/>
     
     <category term="mwolkka" scheme="https://minsw.github.io/tags/mwolkka/"/>
-    
-    <category term="k8s" scheme="https://minsw.github.io/tags/k8s/"/>
     
   </entry>
   
