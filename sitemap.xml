@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://minsw.github.io/2021/05/11/Designing-Data-Intensive-Applications-02/</loc>
+    
+    <lastmod>2021-05-11T01:42:32.890Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://minsw.github.io/2021/05/11/Designing-Data-Intensive-Applications-01/</loc>
+    
+    <lastmod>2021-05-10T16:36:57.377Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://minsw.github.io/2019/01/26/Kubernetes%EB%8A%94-%EB%AD%98%EA%B9%8C/</loc>
     
     <lastmod>2021-04-30T04:56:02.030Z</lastmod>

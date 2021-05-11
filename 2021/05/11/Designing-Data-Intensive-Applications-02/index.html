@@ -1,0 +1,698 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> &#039;데이터 중심 어플리케이션 설계&#039; 2장 - 데이터 모델과 질의 언어 · Look out</title><meta name="description" content="&amp;#039;데이터 중심 어플리케이션 설계&amp;#039; 2장 - 데이터 모델과 질의 언어 - Lukka Min"><meta name="og:image" content="https://minsw.github.io/images/og_image.png"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/cover.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link rel="search" type="application/opensearchdescription+xml" href="https://minsw.github.io/atom.xml" title="Look out"><script src="//code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script><meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Look out" type="application/atom+xml">
+</head><body><div class="wrap"><header><a class="logo-link" href="/"><img src="/cover.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a class="nav-list-link" href="/" target="_self">BLOG</a></li><li class="nav-list-item"><a class="nav-list-link" href="/archives/" target="_self">ARCHIVE</a></li><li class="nav-list-item"><a class="nav-list-link" href="/tags/" target="_self">TAG</a></li><li class="nav-list-item"><a class="nav-list-link" href="https://github.com/minSW" target="_blank">GITHUB</a></li></ul></header><main class="container"></main><div class="post"><article class="post-block"><h1 class="post-title">&#039;데이터 중심 어플리케이션 설계&#039; 2장 - 데이터 모델과 질의 언어</h1><div class="post-info">2021년 5월 11일<span class="categories"><i class="fa fa-bookmark" aria-hidden="true"></i></span><a class="post-category" href="/categories/ddia/">#ddia</a></div><div class="post-content"><blockquote>
+<p><strong>데이터 중심 어플리케이션 설계 [PART 1]</strong><br>Designing Data Intensive Applications - O’REILLY</p>
+<p>02. Data Models and Query Languages</p>
+</blockquote>
+<br/>
+
+
+<h3 id="📖-Overview"><a href="#📖-Overview" class="headerlink" title="📖 Overview"></a>📖 Overview</h3><p><a href="#02-1-%EA%B4%80%EA%B3%84%ED%98%95-%EB%AA%A8%EB%8D%B8%EA%B3%BC-%EB%AC%B8%EC%84%9C-%EB%AA%A8%EB%8D%B8">02-1. 관계형 모델과 문서 모델</a></p>
+<ul>
+<li><a href="#NoSQL%EC%9D%98-%ED%83%84%EC%83%9D">NoSQL의 탄생</a></li>
+<li><a href="#%EA%B0%9D%EC%B2%B4-%EA%B4%80%EA%B3%84%ED%98%95-%EB%B6%88%EC%9D%BC%EC%B9%98">객체 관계형 불일치</a></li>
+<li><a href="#%EB%8B%A4%EB%8C%80%EC%9D%BC%EA%B3%BC-%EB%8B%A4%EB%8C%80%EB%8B%A4-%EA%B4%80%EA%B3%84">다대일과 다대다 관계</a></li>
+<li><a href="#%EB%AC%B8%EC%84%9C-%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4%EB%8A%94-%EC%97%AD%EC%82%AC%EB%A5%BC-%EB%B0%98%EB%B3%B5%ED%95%98%EA%B3%A0-%EC%9E%88%EB%82%98">문서 데이터베이스는 역사를 반복하고 있나?</a></li>
+<li><a href="#%EA%B4%80%EA%B3%84%ED%98%95-%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4%EC%99%80-%EC%98%A4%EB%8A%98%EB%82%A0%EC%9D%98-%EB%AC%B8%EC%84%9C-%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4">관계형 데이터베이스와 오늘날의 문서 데이터베이스</a></li>
+</ul>
+<p><a href="#02-2-%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%A5%BC-%EC%9C%84%ED%95%9C-%EC%A7%88%EC%9D%98-%EC%96%B8%EC%96%B4">02-2. 데이터를 위한 질의 언어</a></p>
+<ul>
+<li><a href="#%EC%9B%B9%EC%97%90%EC%84%9C%EC%9D%98-%EC%84%A0%EC%96%B8%ED%98%95-%EC%A7%88%EC%9D%98">웹에서의 선언형 질의</a></li>
+<li><a href="#%EB%A7%B5%EB%A6%AC%EB%93%80%EC%8A%A4-%EC%A7%88%EC%9D%98">맵리듀스 질의</a></li>
+</ul>
+<p><a href="#02-3-%EA%B7%B8%EB%9E%98%ED%94%84%ED%98%95-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EB%AA%A8%EB%8D%B8">02-3. 그래프형 데이터 모델</a></p>
+<ul>
+<li><a href="#%EC%86%8D%EC%84%B1-%EA%B7%B8%EB%9E%98%ED%94%84">속성 그래프</a></li>
+<li><a href="#%EC%82%AC%EC%9D%B4%ED%8D%BC-%EC%A7%88%EC%9D%98-%EC%96%B8%EC%96%B4">사이퍼 질의 언어</a></li>
+<li><a href="#SQL%EC%9D%98-%EA%B7%B8%EB%9E%98%ED%94%84-%EC%A7%88%EC%9D%98">SQL의 그래프 질의</a></li>
+<li><a href="#%ED%8A%B8%EB%A6%AC%ED%94%8C-%EC%A0%80%EC%9E%A5%EC%86%8C%EC%99%80-%EC%8A%A4%ED%8C%8C%ED%81%B4">트리플 저장소와 스파클</a></li>
+<li><a href="#%EC%B4%88%EC%84%9D-%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%A1%9C%EA%B7%B8">초석: 데이터로그</a></li>
+</ul>
+<p><a href="#02-%EC%A0%95%EB%A6%AC">02 정리</a><br><a href="#Reference">Reference</a></p>
+<br/>
+
+<h1 id="02-데이터-모델과-질의-언어"><a href="#02-데이터-모델과-질의-언어" class="headerlink" title="02. 데이터 모델과 질의 언어"></a>02. 데이터 모델과 질의 언어</h1><h4 id="배경"><a href="#배경" class="headerlink" title="배경"></a>배경</h4><blockquote>
+<p><em>“내 언어의 한계는 내 세계의 한계를 의미한다”</em> (..?)</p>
+</blockquote>
+<ul>
+<li><p>데이터 모델 = 소프트웨어 개발에서 제일 중요한 부분</p>
+<ul>
+<li>(why?) 소프트웨어가 어떻게 작성됐는지 + 해결하려는 <strong>문제를 어떻게 생각해야 하는지</strong> 에도 영향</li>
+</ul>
+</li>
+<li><p>하나의 데이터 모델을 다른 데이터 모델 위에 계층을 둬서 만드는 것이 일반적 애플리케이션 개발</p>
+</li>
+<li><p>각 계층의 핵심적 문제는 다음 하위 계층 관점에서 데이터 모델을 <strong>표현</strong>하는 방법</p>
+<details>
+
+<blockquote>
+<p>(1) 애플리케이션 개발자는 현실을 보고 객체나 데이터구조, API를 모델링 (for 애플리케이션)<br><U>(2) 데이터 구조 저장 시에는 <strong>범용 데이터 모델</strong>로 표현 (JSON/XML 문서, 관계형 DB 테이블, 그래프 모델)</U> =&gt; <strong>2장 내용</strong><br>(3) DB SW 개발하는 엔지니어는 위 데이터를 메모리나 디스크, 네트워크 상의 바이트 단위로 표현하는 방법 결정 (표현은 다양한방법으로 질의,탐색,조작,처리 등을 가능하게함) =&gt; 3장<br>(4) HW 개발 엔지니어는 전류, 빛의파동, 자기장등의 관점에서 바이트를 표현하는 방법 발견</p>
+</blockquote>
+</details></li>
+<li><p>각 계층은 명확한 데이터 모델을 제공해 하위 계층의 복잡성을 숨긴다 (추상화)</p>
+</li>
+<li><p>다양한 유형의 데이터 모델 =&gt; 각 데이터 모델은 사용 방법에 대한 가정을 나타냄</p>
+</li>
+<li><p>애플리케이션에 적합한 데이터 모델을 선택하는 작업은 매우 중요</p>
+<ul>
+<li>(why?) 데이터모델은 그 위에서 SW가 할수 있는/없는 일에 지대한 영향을 주므로</li>
+</ul>
+</li>
+</ul>
+<h4 id="그래서-2장에서는-💡"><a href="#그래서-2장에서는-💡" class="headerlink" title="그래서 2장에서는 💡"></a>그래서 2장에서는 💡</h4><ul>
+<li>데이터 저장과 질의를 위한 다양한 범용 데이터 모델 알아보기<ul>
+<li>관계형 모델 (relational model)</li>
+<li>문서 모델 (document model)</li>
+<li>그래프 기반 데이터 모델 (graph-based data model)</li>
+</ul>
+</li>
+<li>다양한 질의 언어 &amp; 사용 사례 비교</li>
+</ul>
+<br/>
+
+<h2 id="02-1-관계형-모델과-문서-모델"><a href="#02-1-관계형-모델과-문서-모델" class="headerlink" title="02-1 관계형 모델과 문서 모델"></a>02-1 관계형 모델과 문서 모델</h2><p>Most Famous 데이터모델은? =&gt; 관계형 모델 기반의 <strong>SQL</strong></p>
+<h4 id="관계형-모델"><a href="#관계형-모델" class="headerlink" title="관계형 모델"></a>관계형 모델</h4><ul>
+<li>데이터 구성<ul>
+<li>관계 (relation) : 순서 없는 튜플의 모음 (= SQL의 테이블)</li>
+<li>튜플 (tuple) : (= SQL의 로우(row))</li>
+</ul>
+</li>
+<li>관계형 데이터베이스 관리 시스템 (<strong>RDBMS</strong>, relational database management system)<ul>
+<li>RDBMS + SQL</li>
+<li>정규화된 구조로 데이터를 저장/질의 가능</li>
+</ul>
+</li>
+<li>관계형 데이터베이스 (RDB) 의 근원 =&gt; <strong>비즈니스 데이터 처리</strong><ul>
+<li>사용 사례 : 트랜젝션 처리, 일괄처리</li>
+</ul>
+</li>
+<li>관계형 모델의 목표<ul>
+<li>“정리된 인터페이스 뒤로 구현 세부사항을 숨기는 것”</li>
+</ul>
+</li>
+<li>접근 방식의 경쟁<ul>
+<li>네트워크 모델, 계층 모델 제시 (1970-80s)</li>
+<li>객체 데이터 베이스 반짝 (1980-90s)</li>
+<li>XML 데이터베이스 인기no (2000s)</li>
+<li>결국은 <U>관계형 모델이 오랜시간 우위 지속</U></li>
+<li>NoSQL은? (2010s) =&gt; <a href="#NoSQL%EC%9D%98-%ED%83%84%EC%83%9D">NoSQL의 탄생</a></li>
+</ul>
+</li>
+<li>컴퓨터의 발전 &amp; 네트워크화로 인한 변화<ul>
+<li>컴퓨터의 목적이 다양해짐</li>
+<li>관계형 데이터베이스 =&gt; 비즈니스 데이터 처리 + a</li>
+</ul>
+</li>
+</ul>
+<h3 id="NoSQL의-탄생"><a href="#NoSQL의-탄생" class="headerlink" title="NoSQL의 탄생"></a>NoSQL의 탄생</h3><ul>
+<li>NoSQL 이란?<ul>
+<li>처음엔 인기 트위터 해시태그 <em>#NoSQL</em></li>
+<li><strong>“Not Only SQL”</strong> 로 재해석됨</li>
+</ul>
+</li>
+<li>NoSQL의 원동력 (장점)<ul>
+<li>뛰어난 확장성</li>
+<li>무료 오픈소스</li>
+<li>특수질의 동작</li>
+<li>제한↓ 동적이고 풍부한 표현력</li>
+</ul>
+</li>
+<li>다중 저장소 지속성(polyglot persistence)<ul>
+<li>애플리케이션의 요구사항에 따라 적절한 다양한 데이터 저장소를 동시에 사용</li>
+<li>(관계형 데이터베이스 + 비관계형 데이터스토어) 사용도 가능</li>
+</ul>
+</li>
+</ul>
+<h3 id="객체-관계형-불일치"><a href="#객체-관계형-불일치" class="headerlink" title="객체 관계형 불일치"></a>객체 관계형 불일치</h3><ul>
+<li>객체 지향 프로그래밍(OOP) 언어로 개발하는 어플리케이션 + SQL<ul>
+<li>애플리케이션 코드 &lt;==(전환 계층 필요)==&gt; 데이터 베이스 모델 객체</li>
+<li>RDB의 SQL 과 프로그래밍 언어 사이의 데이터 구조, 기능등의 차이로 인한 충돌</li>
+<li>= <strong>임피던스 불일치(impedance mismatch)</strong></li>
+</ul>
+</li>
+<li>객체 관계형 매핑(ORM) 프레임워크<ul>
+<li>ORM (Object-Relational Mapping) : 객체와 관계형 데이터베이스의 데이터를 자동으로 매핑(연결)해주는 것</li>
+<li>=&gt; 전환 계층의 Boilerplate Code 감소 (but 차이는 여전)</li>
+</ul>
+</li>
+<li>예제<ul>
+<li><code>p.30 ~</code> Linkedin 예제</li>
+<li>이력서 같이 모든 내용을 갖추고 있는 <strong>문서</strong> 형태의 데이터 구조 (=&gt; JSON  👍🏻)</li>
+</ul>
+</li>
+<li><strong>문서 지향 데이터베이스</strong> (document-oriented database)<ul>
+<li>JSON 포맷 지원</li>
+<li>ex. MongoDB, RethinkDB, CouchDB, Espresso</li>
+</ul>
+</li>
+<li>JSON 표현<ul>
+<li>임피던스 불일치 감소, 스키마 유연성, 더 나은 <strong>지역성(locality)</strong></li>
+<li><U>일대다(1:N)</U> 관계 (데이터 트리 구조)</li>
+<li>But, 데이터 부호화 형식으로서 가지는 문제 有 =&gt; [4장]</li>
+</ul>
+</li>
+</ul>
+<h3 id="다대일과-다대다-관계"><a href="#다대일과-다대다-관계" class="headerlink" title="다대일과 다대다 관계"></a>다대일과 다대다 관계</h3><ul>
+<li>평문(텍스트 문자열) 저장 vs ID 사용<ul>
+<li>ID : 의미있는 정보는 한 곳에만 저장. 참조는 모두 ID 사용</li>
+<li>텍스트 : 그것을 사용하는 모든 레코드에서 중복 저장</li>
+<li>즉, ID 사용의 장점은 =&gt; <U>중복 제거, 변경 용이</U></li>
+</ul>
+</li>
+<li>중복된 데이터의 정규화<ul>
+<li><strong>다대일(N:1)</strong> 관계 필요</li>
+<li><U>관계형</U> &gt; 문서형</li>
+</ul>
+</li>
+<li>문서 데이터베이스의 JOIN ?<ul>
+<li>보통 지원 X (트리구조, 조인 필요 x)</li>
+<li>DB가 지원하지않으면 <U>다중 질의를 만들어 조인을 흉내내야함</U></li>
+</ul>
+</li>
+<li>Q. 앗 나는 join-free 문서여도 문제 없다구요?<ul>
+<li>기능이 추가될수록 데이터는 상호 연결되는 경향 =&gt; <strong>다대다(N:M)</strong> 관계</li>
+<li>따라서 참조 표현 / 질의를 위한 조인이 필요하게 될 수도 있음</li>
+</ul>
+</li>
+</ul>
+<h3 id="문서-데이터베이스는-역사를-반복하고-있나"><a href="#문서-데이터베이스는-역사를-반복하고-있나" class="headerlink" title="문서 데이터베이스는 역사를 반복하고 있나?"></a>문서 데이터베이스는 역사를 반복하고 있나?</h3><ul>
+<li><em>“‘다대다 관계’ 를 어떻게 표현할건가? “</em> 의 논쟁<ul>
+<li>관계형 데이터베이스 : “ssap-possible”</li>
+<li>문서 데이터 베이스 &amp; NoSQL : “…”</li>
+<li>오래된 ‘대논쟁’. 가장 초기의 전산화 데이터베이스 시스템으로 돌아가면 …</li>
+</ul>
+</li>
+<li>IBM의 정보 관리 시스템 (IMS, Information Management System)<ul>
+<li><strong>계층 모델</strong> 사용 (= JSON 모델과 비슷)</li>
+<li>일대다 (o) / 다대다 (x) 조인(x)</li>
+</ul>
+</li>
+<li>계층 모델의 한계를 극복하기 위한 2가지 솔루션<ul>
+<li><strong>관계형 모델</strong> (SQL)</li>
+<li><strong>네트워크 모델</strong> (희미..)</li>
+</ul>
+</li>
+</ul>
+<h4 id="네트워크-모델"><a href="#네트워크-모델" class="headerlink" title="네트워크 모델"></a>네트워크 모델</h4><ul>
+<li>= <strong>코다실 모델</strong><ul>
+<li>코다실 (CODASYL, Conference on Data Systems Languages) 에서 표준화</li>
+</ul>
+</li>
+<li>특징<ul>
+<li>계층 모델을 일반화 (+ 다중 부모 가능)</li>
+<li>레코드 간 연결은 foreign key 보다는 ‘프로그래밍 언어의 포인터’ 와 비슷</li>
+<li>사실상 삽입시 조인 수행</li>
+</ul>
+</li>
+<li><strong>접근 경로</strong><ul>
+<li>레코드 접근의 유일한 방법</li>
+<li>최상위 레코드(root) 에서부터 연속된 연결 경로를 따르는 방법</li>
+</ul>
+</li>
+<li>접근 경로의 문제점<ul>
+<li>다중 부모 가질 시, 다양한 관계를 모두 추적해야 함</li>
+<li>수동 접근 경로는 성능은 효율, 코드의 복잡성 및 유연X</li>
+</ul>
+</li>
+<li>즉, 네트워크 모델 (계층 모델) 은 원하는 데이터가 경로에 없으면 GG<ul>
+<li>새로운 접근 경로 다룰 시, 질의 코드 재작성 필요 (☠️)</li>
+</ul>
+</li>
+</ul>
+<h4 id="관계형-모델-1"><a href="#관계형-모델-1" class="headerlink" title="관계형 모델"></a>관계형 모델</h4><ul>
+<li>관계형 모델의 하는 일<ul>
+<li>모든 데이터 배치</li>
+<li>관계(테이블) = 튜플(로우)의 컬렉션</li>
+</ul>
+</li>
+<li>특징 (vs 네트워크 모델)<ul>
+<li>복잡한 접근 경로 X</li>
+<li>임의 조건에 일치하는 로우 읽기 가능</li>
+<li>다른 테이블과의 foreign key 관계와 무관하게 로우 삽입 가능</li>
+<li>질의 시 조인</li>
+</ul>
+</li>
+<li>“접근경로가 없다?”<ul>
+<li>없다기보단 <U>Query Optimizer가 자동으로 대신</U> 만드는 것</li>
+</ul>
+</li>
+<li>관계형 데이터베이스의 ‘질의 최적화기 (Query Optimizer)’<ul>
+<li>새로운 기능 추가가 쉬움<ul>
+<li>새로운 색인을 위해 질의를 바꿀 필요 X (자동으로 가장 적합한 색인 사용)</li>
+</ul>
+</li>
+<li>범용 최적화기 사용시 모든 애플리케이션이 혜택</li>
+</ul>
+</li>
+</ul>
+<h4 id="문서-데이터베이스와의-비교-공통점"><a href="#문서-데이터베이스와의-비교-공통점" class="headerlink" title="문서 데이터베이스와의 비교 (공통점)"></a>문서 데이터베이스와의 비교 (공통점)</h4><ul>
+<li>문서 데이터베이스 = 계층 모델<ul>
+<li>상위 레코드 내에 중첩된 레코드 저장 (별도 테이블 x)</li>
+</ul>
+</li>
+<li>문서 데이터베이스 = 관계형 데이터베이스<ul>
+<li>다대일, 다대다 관계 표현의 근본적 동작 =&gt; 관련 항목은 <U>고유한 식별자로 참조</U><ul>
+<li>관계형 모델 : <strong>외래 키 (foreign key)</strong></li>
+<li>문서 모델 : <strong>문서 참조 (document reference)</strong></li>
+<li>=&gt; 조인이나 후속질의를 사용해 읽기 시점에 확인</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="관계형-데이터베이스와-오늘날의-문서-데이터베이스"><a href="#관계형-데이터베이스와-오늘날의-문서-데이터베이스" class="headerlink" title="관계형 데이터베이스와 오늘날의 문서 데이터베이스"></a>관계형 데이터베이스와 오늘날의 문서 데이터베이스</h3><ul>
+<li>관계형 데이터베이스 vs 문서 데이터베이스<ul>
+<li>내결함성(5장), 동시성 처리(7장), …</li>
+<li>여기서는 <strong>‘데이터 모델’의 차이점</strong> 만 집중</li>
+</ul>
+</li>
+<li>데이터 모델 비교<ul>
+<li>관계형 DB : 조인, 다대일/다대다 관계 지원 good</li>
+<li>문서 DB : 스키마 유연성, 지역성 (성능 ↑), 애플리케이션의 데이터구조와 유사<ul>
+<li>한계) 문서 내 중첩항목 바로 참조 X, 미흡한 조인 지원</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><em>“아 ㅋㅋ 그래서 어떤게 더 간단한데?”</em><ul>
+<li>=&gt; 데이터 항목 간의 관계 유형에 따라 다름</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>a) 데이터가 문서랑 비슷한 구조일 경우 =&gt; <strong>문서 모델</strong></p>
+<ul>
+<li>여러 테이블로 찢는(shredding) 관계형 기법은 불필요한 복잡도</li>
+</ul>
+<p>b) 다대다 관계 사용 =&gt; <strong>관계형</strong> 사용</p>
+<ul>
+<li>비정규화 데이터의 일관성을 유지하기 위한 코드 복잡도 및 다중 요청 (성능 ↓)</li>
+</ul>
+<p>c) 상호 연결이 많은 데이터 =&gt; 관계형은 무난, <strong>그래프 모델</strong> 사용</p>
+</blockquote>
+<h4 id="문서-모델에서의-스키마-유연성"><a href="#문서-모델에서의-스키마-유연성" class="headerlink" title="문서 모델에서의 스키마 유연성"></a>문서 모델에서의 스키마 유연성</h4><ul>
+<li>스키마 강요<ul>
+<li>JSON (문서, 관계형) : 스키마 강요 X</li>
+<li>XML (관계형) : 선택적 스키마 유효성 검사 포함</li>
+</ul>
+</li>
+<li>문서 데이터베이스는 <strong>스키마리스(Schemaless)</strong> ?<ul>
+<li>“스키마가 없다”<ul>
+<li>= 임의의 키와 값을 문서에 추가 가능</li>
+<li>= 읽을 때 필드 존재 여부를 보장하지 않음</li>
+</ul>
+</li>
+<li>암묵적 스키마는 있지만 DB 는 강요 X</li>
+</ul>
+</li>
+<li>스키마 접근 방식<ul>
+<li>쓰기 스키마 (schema-on-write) : 스키마는 명시적이고 DB는 모든 데이터가 스키마를 따름을 보장 (RDB 접근 방식)<ul>
+<li>(= Statically typed)</li>
+<li>모든 레코드가 동일한 구조일 경우 good</li>
+</ul>
+</li>
+<li>읽기 스키마 (schema-on -read) : 데이터 구조는 암묵적이고 데이터를 읽을 때만 해석<ul>
+<li>(= Dynamically typed)</li>
+<li>컬렉션 내 항목이 모두 동일한 구조가 아닐 경우 good</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>데이터 타입 변경 예시<ul>
+<li>쓰기 스키마 : <strong>마이그레이션</strong> 수행 필요 (중단시간 ↑)</li>
+<li>읽기 스키마 : 애플리케이션에서 이전 문서에 대한 처리 코드 추가</li>
+</ul>
+</li>
+<li>더 자세한 스키마 내용은 [4장] 에서</li>
+</ul>
+<h4 id="질의를-위한-데이터-지역성"><a href="#질의를-위한-데이터-지역성" class="headerlink" title="질의를 위한 데이터 지역성"></a>질의를 위한 데이터 지역성</h4><ul>
+<li><strong>저장소 지역성</strong> (storage locality)<ul>
+<li>한번에 해당 문서의 많은 부분을 필요로 하는 경우 good</li>
+</ul>
+</li>
+<li>문서 모델의 저장소 지역성<ul>
+<li>큰 문서에서는 낭비일 수도 (갱신시에도 전체 문서 적재)<ul>
+<li>부호화된 크기를 바꾸지 않는 수정은 쉽게 수행 가능 (<a target="_blank" rel="noopener" href="https://www.mongodb.com/blog/post/schema-design-for-time-series-data-in-mongodb">ref #19</a>)</li>
+<li>= update() vs upsert()</li>
+</ul>
+</li>
+<li>따라서, 문서는 작게 유지하면서 크기가 커지는 쓰기를 지양</li>
+</ul>
+</li>
+<li>문서 모델이 아닌 경우의 지역성<ul>
+<li>구글의 Spanner DB 의 로우 교차 배치 스키마 (<a target="_blank" rel="noopener" href="https://static.googleusercontent.com/media/research.google.com/ko//archive/spanner-osdi2012.pdf">ref $28</a>)</li>
+<li>오라클의 다중 테이블 색인 클러스터 테이블(multi-table index cluster table)</li>
+<li>빅테이블(Bigtable) 데이터 모델의 칼럼 패밀리(column-family) 개념</li>
+</ul>
+</li>
+<li>더 자세한 지역성 내용은 [3장] 에서</li>
+</ul>
+<h4 id="문서-데이터베이스와-관계형-데이터베이스의-통합"><a href="#문서-데이터베이스와-관계형-데이터베이스의-통합" class="headerlink" title="문서 데이터베이스와 관계형 데이터베이스의 통합"></a>문서 데이터베이스와 관계형 데이터베이스의 통합</h4><ul>
+<li>관계형 =&gt; 문서<ul>
+<li>대부분의 RDBMS (MySQL 빼고) : XML 지원</li>
+<li>PostgresQL(&gt;=9.3), MySQL(&gt;=5.7), IBM DB2(&gt;=10.5) : JSON 지원</li>
+</ul>
+</li>
+<li>문서 =&gt; 관계형<ul>
+<li>RethinkDB : 관계형 조인 지원</li>
+<li>MongoDB driver : 자동으로 데이터베이스 참조 확인 (클라이언트 측 조인)</li>
+</ul>
+</li>
+<li>관계형 DB 와 문서 DB는 점점 더 비슷해지는 중 (상호보완)</li>
+</ul>
+<img src="https://user-images.githubusercontent.com/26691216/117712091-d94e3680-b20e-11eb-94db-14b315bdfabd.png" width=200/>
+<center><i>skrrr~🦷</i></center>
+
+<br/>
+
+<h2 id="02-2-데이터를-위한-질의-언어"><a href="#02-2-데이터를-위한-질의-언어" class="headerlink" title="02-2 데이터를 위한 질의 언어"></a>02-2 데이터를 위한 질의 언어</h2><p>관계형 모델의 등장 =&gt; 데이터를 <U>질의하는 새로운 방법</U> 도 등장</p>
+<ul>
+<li><strong>선언형</strong> 질의언어 (SQL, 관계대수)<ul>
+<li>결과가 <strong>충족해야하는 조건</strong> + 데이터를 <strong>어떻게 변환</strong>할지 지정 (정렬, 그룹화, 집계, ..)</li>
+<li>어떻게 실행할지는 Optimizer의 몫</li>
+</ul>
+</li>
+<li><strong>명령형</strong> 코드 (IBM, 코다실)<ul>
+<li>특정 순서로 특정 연산을 수행하게끔 컴퓨터에게 지시</li>
+<li>목표를 달성하기 위한 <strong>방법</strong></li>
+</ul>
+</li>
+<li>선언형의 장점 (vs 명령형)<ul>
+<li>선언형은 더 간결하고 쉬운 작업</li>
+<li>질의 변경 없이도 성능 향상 가능 (기능적으로 더 제한적 = 자동 최적화 여지 더 많음)</li>
+<li>종종 병렬 실행에 적합 (순서 의존 x)</li>
+</ul>
+</li>
+</ul>
+<h3 id="웹에서의-선언형-질의"><a href="#웹에서의-선언형-질의" class="headerlink" title="웹에서의 선언형 질의"></a>웹에서의 선언형 질의</h3><ul>
+<li>예제<ul>
+<li><code>p.44 ~</code> 웹 사이트 예제</li>
+<li>CSS, XSL (선언형) vs JS의 코어 DOM API (명령형)</li>
+<li>명령형 접근 방식의 문제점<ul>
+<li>클래스 삭제 감지 x (페이지 리로딩 필요)</li>
+<li>API 변경 시 코드 재작성 필요</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>결론은 선언형 &gt; 명령형 ?<ul>
+<li>웹 브라우저 : 선언형 CSS 스타일 사용이 낫다</li>
+<li>데이터베이스 : 선언형 질의언어 SQL등이 명령형 질의 API보다 낫다</li>
+</ul>
+</li>
+</ul>
+<h3 id="맵리듀스-질의"><a href="#맵리듀스-질의" class="headerlink" title="맵리듀스 질의"></a>맵리듀스 질의</h3><ul>
+<li><strong>맵리듀스 (MapReduce)</strong><ul>
+<li>많은 컴퓨터에서 대량의 데이터를 처리하기 위한 프로그래밍 모델</li>
+<li>(구글때문에 유명해졌다? (<a target="_blank" rel="noopener" href="https://static.googleusercontent.com/media/research.google.com/ko//archive/mapreduce-osdi04.pdf">ref #33</a>))</li>
+</ul>
+</li>
+<li>일부 NoSQL 데이터 저장소 =&gt; 제한된 형태의 맵리듀스 제공<ul>
+<li>MongoDB, CouchDB</li>
+<li>많은 문서를 대상으로 read-only 질의 시 사용</li>
+</ul>
+</li>
+<li>예제 - MongoDB의 맵리듀스<ul>
+<li>선언형 질의와 명령형 질의 API 그 사이 어디쯤</li>
+<li>FP의 <code>map (collect)</code> &amp; <code>reduce (fold/inject)</code> 함수 기반<ul>
+<li>단, <strong>순수 함수 (pure function)</strong> 여야함 (side-effect X)</li>
+<li>임의 순서로 실행 가능, 재실행 가능</li>
+</ul>
+</li>
+<li><strong>집계 파이프라인(aggregation pipeline)</strong> 지원 (&gt;= 2.2)<ul>
+<li>JSON 기반 구문</li>
+<li>맵리듀스 함수 작성의 어려움 해소를 위함</li>
+<li>선언형 질의 언어 (=&gt; Optimizer 열일 가능)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>맵리듀스 (low-level) vs SQL (high-level)<ul>
+<li>반대 개념이 아님. 분산 SQL 구현도 가능하고, MR 사용한/사용하지 않은 구현 모두 O</li>
+<li>질의 중간에 자바스크립트 사용/확장 가능 (MR, 일부 SQL)</li>
+</ul>
+</li>
+<li>더 자세한 맵리듀스는 [10장] 에서</li>
+</ul>
+<br/>
+
+<h2 id="02-3-그래프형-데이터-모델"><a href="#02-3-그래프형-데이터-모델" class="headerlink" title="02-3 그래프형 데이터 모델"></a>02-3 그래프형 데이터 모델</h2><blockquote>
+<ul>
+<li>1:N (트리구조), 레코드간 관계 無 =&gt; 문서모델</li>
+<li>N:1, N:M 관계 =&gt; 관계형 모델</li>
+<li>복잡한 N:M 관계 =&gt; <strong>그래프형 모델</strong></li>
+</ul>
+</blockquote>
+<ul>
+<li>구성<ul>
+<li>정점 (vertex) : (=노드, 엔티티)</li>
+<li>간선 (edge) : (=관계, 호(arc))</li>
+</ul>
+</li>
+<li>특징<ul>
+<li>많은 유형의 데이터 모델링 가능</li>
+<li><strong>동종</strong> 데이터 뿐만아니라 다른 유형의 객체도 일관성있게 저장 가능</li>
+</ul>
+</li>
+<li>그래프의 데이터 구조화<ul>
+<li><strong>속성 그래프</strong> 모델 : Neo4j, Titan, InfiniteGraph</li>
+<li><strong>트리플 저장소</strong> 모델 : Datomic, Allegrograph</li>
+</ul>
+</li>
+<li>그래프의 질의 방식<ul>
+<li><U>선언형 질의 언어 : Cypher, SPARQL, Datalog</U></li>
+<li>명령형 질의 언어 : Gremlin</li>
+<li>그래프 처리 프레임워크  : Pregel =&gt; [10장]</li>
+</ul>
+</li>
+</ul>
+<h3 id="속성-그래프"><a href="#속성-그래프" class="headerlink" title="속성 그래프"></a>속성 그래프</h3><ul>
+<li>정점(vertex) 구성 요소<ul>
+<li>고유한 식별자</li>
+<li>유출(outgoing) 간선 집합</li>
+<li>유입(incoming) 간선 집합</li>
+<li>속성 컬렉션 (key-value)</li>
+</ul>
+</li>
+<li>간선(edge) 구성 요소<ul>
+<li>고유한 식별자</li>
+<li>간선 시작 정점 (<strong>꼬리 정점</strong>)</li>
+<li>간선 끝 정점 (<strong>머리 정점</strong>)</li>
+<li>두 정점 간 관계 유형을 설명하는 <U>레이블</U></li>
+<li>속성 컬렉션 (key-value)</li>
+</ul>
+</li>
+<li>특징<ul>
+<li>1. 정점은 다른 정점과 간선으로 연결됨 (특정 유형 제한 스키마 x)</li>
+<li>2. 일련의 정점을 따라 앞뒤 방향으로 순회</li>
+<li>3. 다른 유형의 관계에 서로 다른 레이블 사용 (=&gt; 깔끔한 모델 유지)</li>
+</ul>
+</li>
+<li>즉, <strong>많은 유연성</strong> 제공<ul>
+<li>기능 추가 시 쉬운 확장 ok</li>
+<li>구조가 다르거나 데이터 입도가 가지각색인 경우도 ok</li>
+<li>데이터 <strong>입도 (granularity)</strong><ul>
+<li>“데이터가 얼마나 자세히 분할되었는가”</li>
+<li>= 얼마나 세밀하게 나눌지 (Fine-grained) + 거칠게 묶을지(Coarse-grained)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="사이퍼-질의-언어"><a href="#사이퍼-질의-언어" class="headerlink" title="사이퍼 질의 언어"></a>사이퍼 질의 언어</h3><ul>
+<li><strong>사이퍼 (Cypher)</strong><ul>
+<li>속성 그래프를 위한 <strong>선언형</strong> 질의 언어</li>
+<li>Neo4j 그래프 데이터베이스용으로 제작</li>
+</ul>
+</li>
+<li>사이퍼 질의<ul>
+<li>정점 : 상징적 이름 (id) 포함</li>
+<li>간선 생성 : <code>(꼬리노드 id) -[:간선 label]=&gt; (머리노드 id)</code></li>
+<li><strong><code>MATCH</code></strong> 질의 사용 예제<ul>
+<li><code>:WITHIN*0</code> = Regex <code>*</code> (0회 이상 반복)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>다양한 질의 실행의 방법 =&gt; 고민 x (Optimizer 가 알아서)</li>
+</ul>
+<h3 id="SQL의-그래프-질의"><a href="#SQL의-그래프-질의" class="headerlink" title="SQL의 그래프 질의"></a>SQL의 그래프 질의</h3><ul>
+<li>관계형 DB &lt;=&gt; 그래프 데이터<ul>
+<li>관계형 ➡ 그래프 표현 : 가능 ([예제 2-2] 참고)</li>
+<li>그래프 ➡ 관계형 구조로 + SQL 쿼리 : 가…가능.. (△)</li>
+</ul>
+</li>
+<li>그래프 데이터 vs 관계형 데이터베이스 (변환이 어려운 이유)<ul>
+<li>관계형 : 질의에 필요한 조인 미리 파악 가능</li>
+<li>그래프 : 가변적인 간선 순회 (조인 개수 고정 X)</li>
+</ul>
+</li>
+<li><strong>재귀 공통 테이블 식 (recursive common table expression)</strong><ul>
+<li><code>WITH RECURSIVE</code> 문</li>
+<li>관계형 DB에서도 가변 순회 경로에 대한 질의 표현 가능</li>
+<li>But 예제에서는 훨씬 길고 복잡한 질의문.. ([예제 2-4 vs 2-5])</li>
+</ul>
+</li>
+<li>=&gt; 사용 사례에 맞는 데이터 모델 선택이 중요</li>
+</ul>
+<h3 id="트리플-저장소와-스파클"><a href="#트리플-저장소와-스파클" class="headerlink" title="트리플 저장소와 스파클"></a>트리플 저장소와 스파클</h3><ul>
+<li>트리플 저장소 모델 == 속성 그래프 모델 ?<ul>
+<li>거의 동등. 같은 생각을 다른 용어로 표현</li>
+</ul>
+</li>
+<li>정보 저장 형식 =&gt; <U><strong>세 부분 구문</strong> (three-part statements)</U><ul>
+<li>(<code>주어(subject)</code>, <code>서술어(predicate)</code>, <code>목적어(object)</code>)</li>
+<li>주어 = 그래프의 정점 (V)</li>
+<li>목적어 = (1) 원시 데이터타입 값 (value) or (2) 다른 그래프의 정점(V)</li>
+<li>서술어 = (1) 속성 (key) or (2) 간선(E)</li>
+</ul>
+</li>
+<li>예시<ul>
+<li>(1) 정점+속성의 키+값 : ex. <code>(루시, 나이(key), 33(value))</code></li>
+<li>(2) 꼬리정점+간선+머리정점 : ex. <code>(루시, 결혼하다, 알랭)</code></li>
+</ul>
+</li>
+<li><strong>터틀 (Turtle)</strong> 형식의 트리플<ul>
+<li>터틀은 <strong><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Notation3">Notation3(N3)</a></strong> 의 부분 집합</li>
+<li>정점 : <code>_:someName</code><ul>
+<li>서술어 <code>a</code> 는 뭘까 🤔 =&gt; 정점 선언? (ex. <code>_:usa  a  :Location</code>)</li>
+</ul>
+</li>
+<li>세미콜론(;) 사용 시, 동일 주어에 대한 반복 작업 수행 가능</li>
+</ul>
+</li>
+</ul>
+<h4 id="시맨틱-웹"><a href="#시맨틱-웹" class="headerlink" title="시맨틱 웹"></a>시맨틱 웹</h4><ul>
+<li>트리플 저장소 데이터 모델 != 시맨틱 웹<ul>
+<li>어떠한 관계도 주장하지는 않으나 (ex. Datomic), 많은 사람들이 밀접한 관계로 생각 </li>
+</ul>
+</li>
+<li>시맨틱 웹 : 컴퓨터(기계)가 읽을 수 있는 (Ontology) 데이터로 정보를 게시하고 처리하는 방식의 웹<ul>
+<li>과대평가 후 현재는 부진..</li>
+</ul>
+</li>
+</ul>
+<h4 id="RDF-데이터-모델"><a href="#RDF-데이터-모델" class="headerlink" title="RDF 데이터 모델"></a>RDF 데이터 모델</h4><ul>
+<li><strong>자원 기술 프레임워크</strong> (<strong>RDF</strong>, Resource Description Framework)<ul>
+<li>서로 다른 웹 사이트가 일관된 형식으로 데이터를 게시하기 위한 방법 제안</li>
+<li>=&gt; <strong>데이터 웹 (web of data)</strong> 에 자동으로 결합 가능 (=database of everything)</li>
+</ul>
+</li>
+<li>RDF는 인터넷 전체의 데이터 교환을 위해 설계<ul>
+<li><code>(주어, 서술어, 목적어)</code> 가 주로 URI</li>
+<li>접속 가능 여부와는 무관 (RDF 관점에선 just 네임스페이스)</li>
+</ul>
+</li>
+<li>형식<ul>
+<li>터틀 언어 (보기 쉬움)<ul>
+<li>RDF 데이터를 human-readable format 으로 표현</li>
+</ul>
+</li>
+<li>XML 형식 (가능은 하지만 장황)</li>
+<li>서로 다른 RDF 형식으로 변환하는 도구 =&gt; <U>아파치 제나(Jena)</U></li>
+</ul>
+</li>
+</ul>
+<h4 id="스파클-질의-언어"><a href="#스파클-질의-언어" class="headerlink" title="스파클 질의 언어"></a>스파클 질의 언어</h4><ul>
+<li><strong>스파클</strong> (<strong>SPARQL</strong>, SPARQL Protocol And RDF Query Language) <ul>
+<li>RDF 데이터 모델을 사용한 트리플 저장소 (선언형) 질의 언어</li>
+<li>사이퍼와 유사 (<code>p61</code> 참고)</li>
+<li>시맨틱 웹이 아니더라도 애플리케이션 내부적 사용하는 강력한 도구가 될 수 있음</li>
+</ul>
+</li>
+<li>스파클 질의<ul>
+<li>변수는 ?로 시작</li>
+</ul>
+</li>
+<li>RDF는 서술어만 사용 (속성/간선 구별 x)</li>
+</ul>
+<blockquote>
+<h4 id="그래프-데이터베이스-vs-네트워크-모델-차이"><a href="#그래프-데이터베이스-vs-네트워크-모델-차이" class="headerlink" title="그래프 데이터베이스 vs 네트워크 모델 (차이)"></a>그래프 데이터베이스 vs 네트워크 모델 (차이)</h4><ul>
+<li>스키마<ul>
+<li>코다실 : 다른 레코드 타입, 중첩가능 레코드 타입 지정하는 스키마 존재</li>
+<li>그래프 : 제한 x (모든 정점은 다른 정점으로 가는 간선 ok)</li>
+</ul>
+</li>
+<li>접근 방식<ul>
+<li>코다실 : only 접근 경로 중 하나 탐색</li>
+<li>그래프 : 고유 ID로 정점 직접 참조 or 색인으로 빠르게 찾기</li>
+</ul>
+</li>
+<li>정렬<ul>
+<li>코다실 : 레코드 하위 항목은 정렬된 집합 (신규 삽입시 위치 고려)</li>
+<li>그래프 : 정렬 x. 질의 시에만 결과 정렬</li>
+</ul>
+</li>
+<li>질의<ul>
+<li>코다실 : 모든 질의는 명령형. 스키마 변경 시 질의 쉽게 손상</li>
+<li>그래프 : 대부분 고수준 선언형 질의언어 사용. (명령형도 가능은 o)</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<h3 id="초석-데이터로그"><a href="#초석-데이터로그" class="headerlink" title="초석: 데이터로그"></a>초석: 데이터로그</h3><ul>
+<li><strong>데이터로그 (Datalog)</strong><ul>
+<li>스파클, 사이퍼보다 훨씬 오래된 언어.. 말그대로 질의언어의 기반 초석 제공</li>
+<li>사용 예) Datomic, Cascalog (s-expression 문법)</li>
+</ul>
+</li>
+<li>정보 저장 형식<ul>
+<li><code>서술어(predicate)</code> (<code>주어(subject)</code>, <code>목적어(object)</code>)</li>
+<li>트리플 보다 좀 더 일반화</li>
+</ul>
+</li>
+<li>데이터로그 질의<ul>
+<li>복잡한 질의를 작은부분으로 나눠 단계별로 차례대로 나아감 =&gt; <strong>규칙(rule)</strong> 정의</li>
+<li>규칙은 다른 규칙 참조 가능</li>
+</ul>
+</li>
+<li>예제<ul>
+<li><code>p63 ~</code> (예제는 Prolog 문법)</li>
+<li>서술어 = 데이터나 다른 규칙으로부터 파생 (트리플 x)</li>
+<li>변수 = 대문자로 시작하는 단어</li>
+</ul>
+</li>
+<li>특징<ul>
+<li>이전의 질의 언어와는 다른 사고</li>
+<li>다른 질의의 규칙을 결합/재사용 가능하다는 점이 강력 (복잡한 데이터에 효과적)</li>
+</ul>
+</li>
+</ul>
+<br/>
+
+<h2 id="02-정리"><a href="#02-정리" class="headerlink" title="02 정리"></a>02 정리</h2><ul>
+<li>데이터 모델은 애플리케이션 요구사항에 가장 적합한 모델을 찾는 것이 중요 (만능 솔루션 x)</li>
+<li>데이터 표현을 위한 발전<ul>
+<li>데이터를 큰 트리(<strong>계층 모델</strong>) 로 표현 하려니 __ 다대다 관계 표현에 부적합</li>
+<li>=&gt; <U><strong>관계형 모델</strong></U> 고안 __ 애플리케이션 요구사항에 부적합한 케이스 존재</li>
+<li>=&gt; <strong>비관계형 데이터저장소 (NoSQL)</strong> 등장</li>
+</ul>
+</li>
+<li>NoSQL의 2가지 갈래<ul>
+<li><U><strong>문서 데이터베이스</strong></U> (문서 간 관계 ↓)</li>
+<li><U><strong>그래프 데이터베이스</strong></U> (모든것의 관계 ↑)</li>
+</ul>
+</li>
+<li>스키마 유연성의 차이<ul>
+<li>스키마가 명시적인지(쓰기에 강요)</li>
+<li>스키마가 암시적인지(읽기에 다룸)</li>
+</ul>
+</li>
+<li>각 데이터 모델은 고유한 질의 언어 or 프레임워크 제공</li>
+<li>그 외 다양한 데이터 모델들<ul>
+<li>GenBank, ROOT, 전문(full-text) 검색, …</li>
+</ul>
+</li>
+</ul>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
+<li>ORM이란 : <a target="_blank" rel="noopener" href="https://gmlwjd9405.github.io/2019/02/01/orm.html">https://gmlwjd9405.github.io/2019/02/01/orm.html</a></li>
+<li>02장 - 참고문헌</li>
+</ul>
+</div><p class="post-tags"><i class="fa fa-tags" aria-hidden="true"></i><a href="/tags/data/">#data</a><a href="/tags/data-intensive-application/">#data_intensive_application</a><a href="/tags/ddia/">#ddia</a><a href="/tags/book/">#book</a><a href="/tags/stady/">#stady</a></p></article></div><footer><div class="paginator"><a class="next" href="/2021/05/11/Designing-Data-Intensive-Applications-01/">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'minsw-github-io';
+var disqus_identifier = '2021/05/11/Designing-Data-Intensive-Applications-02/';
+var disqus_title = '&amp;#039;데이터 중심 어플리케이션 설계&amp;#039; 2장 - 데이터 모델과 질의 언어';
+var disqus_url = 'https://minsw.github.io/2021/05/11/Designing-Data-Intensive-Applications-02/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//#{theme.disqus}.disqus.com/count.js" async></script><div class="copyright"><p>© 2018 - 2021 <a href="https://minsw.github.io">Lukka Min</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-143001954-1",'auto');ga('send','pageview');</script><link rel="stylesheet" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css" media="screen" type="text/css"><script src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script><script>$(function(){$('.datatable').dataTable( {"order": [[ 0, "desc" ]],"iDisplayLength": -1,"lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]} );});</script></body></html>

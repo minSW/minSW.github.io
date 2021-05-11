@@ -852,3 +852,19 @@ footer {
   cursor: pointer;
 }
 
+.post-content h4 {
+  color: #5A646F;
+}
+
+.post-content h2:after {
+    text-decoration: none;
+    border-bottom: 1px solid rgb(52,73,94,.5);
+    padding-bottom: 3px;
+    content: "";
+    display: block;
+    width: 50px;
+}
+
+.post-content h2 {
+  font-size: 25px;
+}
