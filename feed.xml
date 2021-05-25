@@ -6,7 +6,7 @@
   <link href="https://minsw.github.io/feed.xml" rel="self"/>
   
   <link href="https://minsw.github.io/"/>
-  <updated>2021-05-11T01:42:32.890Z</updated>
+  <updated>2021-05-25T02:11:31.290Z</updated>
   <id>https://minsw.github.io/</id>
   
   <author>
@@ -15,6 +15,41 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>&amp;#039;데이터 중심 어플리케이션 설계&amp;#039; 6장 - 파티셔닝</title>
+    <link href="https://minsw.github.io/2021/05/25/Designing-Data-Intensive-Applications-06/"/>
+    <id>https://minsw.github.io/2021/05/25/Designing-Data-Intensive-Applications-06/</id>
+    <published>2021-05-24T16:06:13.000Z</published>
+    <updated>2021-05-25T02:11:31.290Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote><p><strong>데이터 중심 어플리케이션 설계 [PART 2]</strong><br>Designing Data Intensive Applications - O’REILLY</p><p>06. Partitioning</p></blockquote><h3 id="📖-Overview"><a href="#📖-Overview" class="headerlink" title="📖 Overview"></a>📖 Overview</h3><p><a href="#06-1-%ED%82%A4-%EA%B0%92-%EB%8D%B0%EC%9D%B4%ED%84%B0-%ED%8C%8C%ED%8B%B0%EC%85%94%EB%8B%9D">06-1. 키-값 데이터 파티셔닝</a></p><ul><li><a href="#%ED%82%A4-%EB%B2%94%EC%9C%84-%EA%B8%B0%EC%A4%80-%ED%8C%8C%ED%8B%B0%EC%85%94%EB%8B%9D">키 범위 기준 파티셔닝</a></li><li><a href="#%ED%82%A4%EC%9D%98-%ED%95%B4%EC%8B%9C%EA%B0%92-%EA%B8%B0%EC%A4%80-%ED%8C%8C%ED%8B%B0%EC%85%94%EB%8B%9D">키의 해시값 기준 파티셔닝</a></li><li><a href="#%EC%8F%A0%EB%A6%B0-%EC%9E%91%EC%97%85%EB%B6%80%ED%95%98%EC%99%80-%ED%95%AB%EC%8A%A4%ED%8C%9F-%EC%99%84%ED%99%94">쏠린 작업부하와 핫스팟 완화</a></li></ul><p><a href="#06-2-%ED%8C%8C%ED%8B%B0%EC%85%94%EB%8B%9D%EA%B3%BC-%EB%B3%B4%EC%A1%B0-%EC%83%89%EC%9D%B8">06-2. 파티셔닝과 보조 색인</a></p><ul><li><a href="#%EB%AC%B8%EC%84%9C-%EA%B8%B0%EC%A4%80-%EB%B3%B4%EC%A1%B0-%EC%83%89%EC%9D%B8-%ED%8C%8C%ED%8B%B0%EC%85%94%EB%8B%9D">문서 기준 보조 색인 파티셔닝</a></li><li><a href="#%EC%9A%A9%EC%96%B4-%EA%B8%B0%EC%A4%80-%EB%B3%B4%EC%A1%B0-%EC%83%89%EC%9D%B8-%ED%8C%8C%ED%8B%B0%EC%85%94%EB%8B%9D">용어 기준 보조 색인 파티셔닝</a></li></ul><p><a href="#06-3-%ED%8C%8C%ED%8B%B0%EC%85%98-%EC%9E%AC%EA%B7%A0%ED%98%95%ED%99%94">06-3. 파티션 재균형화</a></p><ul><li><a href="#%EC%9E%AC%EA%B7%A0%ED%98%95%ED%99%94-%EC%A0%84%EB%9E%B5">재균형화 전략</a></li><li><a href="#%EC%9A%B4%EC%98%81-%EC%9E%90%EB%8F%99-%EC%9E%AC%EA%B7%A0%ED%98%95%ED%99%94%EC%99%80-%EC%88%98%EB%8F%99-%EC%9E%AC%EA%B7%A0%ED%98%95%ED%99%94">운영: 자동 재균형화와 수동 재균형화</a></li></ul><p><a href="#06-4-%EC%9A%94%EC%B2%AD-%EB%9D%BC%EC%9A%B0%ED%8C%85">06-4. 요청 라우팅</a></p><ul><li><a href="#%EB%B3%91%EB%A0%AC-%EC%A7%88%EC%9D%98-%EC%8B%A4%ED%96%89">병렬 질의 실행</a></li></ul><p><a href="#06-%EC%A0%95%EB%A6%AC">06 정리</a></p><br/><h1 id="6장-파티셔닝"><a href="#6장-파티셔닝" class="headerlink" title="6장 파티셔닝"></a>6장 파티셔닝</h1><h4 id="배경"><a href="#배경" class="headerlink" title="배경"></a>배경</h4><ul><li><p>파티셔닝이란?</p><ul><li>데이터셋이 매우 크거나, 질의 처리량이 매우 높은 경우 데이터를 의도적으로 작은 단위(‘파티션’)로 쪼개는 작업 (=샤딩)</li><li><strong><em>파티션</em></strong><ul><li>= 샤드(MongoDB, ES, Solr ..)</li><li>= 리전 (Hbase)</li><li>= 태블릿 (Bigtable)</li><li>= 브이노드 (Cassandra, Riak)</li><li>= 브이버켓 (Couchbase)</li></ul></li><li>파티션은 보통 각 데이터 단위(레코드, 로우, 문서) 가 하나의 파티션에 속함<ul><li>즉, 파티션 그 자체로 작은 데이터베이스가 됨</li></ul></li></ul></li><li><p>파티셔닝의 목적</p><ul><li>확장성, 부하 분산 (디스크, 질의 부하)</li><li>파티셔닝 지원 데이터베이스의 용도 2가지 : 트랜잭션 작업부하용, 분석용</li><li>용도에 따른 차이는 시스템 튜닝의 차이일뿐, <strong>파티셔닝의 기본 원칙은 동일하게 적용</strong></li></ul></li></ul><h4 id="그래서-6장에서는-💡"><a href="#그래서-6장에서는-💡" class="headerlink" title="그래서 6장에서는 💡"></a>그래서 6장에서는 💡</h4><ul><li>파티셔닝 방법</li><li>데이터 색인과 파티셔닝 간의 상호 작용</li><li>노드 추가/제거 시의 필요 작업 (=&gt; 재균형화)</li><li>데이터베이스가 올바른 파티션을 찾아 요청을 전달하고 질의를 실행하는 방법</li></ul><br/><h2 id="06-1-파티셔닝과-복제"><a href="#06-1-파티셔닝과-복제" class="headerlink" title="06-1 파티셔닝과 복제"></a>06-1 파티셔닝과 복제</h2><ul><li>사용 방법<ul><li>보통 파티셔닝 + 복제 함께 적용 (단, 방식은 독립적 선택)</li><li>각 리더는 하나의 노드에 할당</li></ul></li><li>파티셔닝 목적<ul><li>(데이터와 질의) 부하의 고른 분산</li><li>부하 분산이 안된 Bad Case =&gt; <strong><em>“쏠렸다 (skew)”</em></strong> (부하가 쏠린 파티션 = ‘핫스팟’)</li></ul></li><li>파티셔닝 방법<ul><li>Skew 및 핫스팟을 회피해야함</li><li>가장 심플한 솔루션은 ‘랜덤’ =&gt; 나조차도 어디 저장됐는지도 알 수 없음 (찾으려면 모든 노드에 질의해야)</li></ul></li></ul><h3 id="키-범위-기준-파티셔닝"><a href="#키-범위-기준-파티셔닝" class="headerlink" title="키 범위 기준 파티셔닝"></a>키 범위 기준 파티셔닝</h3><img src="https://user-images.githubusercontent.com/26691216/119421514-d2104800-bd39-11eb-803e-429f19a4a7e5.jpeg" width=400><ul><li>각 파티션의 연속된 범위 (MIN~MAX) 의 키 할당<ul><li>Like 백과사전</li></ul></li><li>파티션 경계 (키 범위 크기)<ul><li>동일하지 않아도 됨</li><li>관리자가 수동 선택 or 데이터베이스가 자동으로 선택하도록</li></ul></li><li>장단점<ul><li>장점 : 범위 스캔에 유용 (파티션 내 키 정렬 저장, 다중 칼럼 색인)</li><li>단점 : 특정 접근 패턴으로인한 핫스팟 발생 가능성 (ex. 실시간으로 기록되는 key = timestamp 센서)</li></ul></li><li>사용 예<ul><li>Bigtable, HBase, RethinkDB, MongoDB(&lt;2.4)</li></ul></li></ul><h3 id="키의-해시값-기준-파티셔닝"><a href="#키의-해시값-기준-파티셔닝" class="headerlink" title="키의 해시값 기준 파티셔닝"></a>키의 해시값 기준 파티셔닝</h3><ul><li>Skew와 핫스팟 회피를 위해 해시함수 많이 사용<ul><li>좋은 해시함수는 유사한 데이터가 인입되어도 균일되게 분산</li><li>프로그래밍 언어의 내장 해시 함수는 파티셔닝에 적합하지 않을 수도 (ex. Java의 <code>Object.hashCode()</code>)</li></ul></li><li>파티션 경계<ul><li>동일하지 않아도 됨 (무작위에 가깝게 선택도 가능)</li><li>= ‘일관성 해싱’? <ul><li>부하를 균등하게 분산시키는 방법 (잘 사용 x)</li></ul></li></ul></li><li>장단점<ul><li>장점 : 키를 파티션 사이에 균일하게 분산</li><li>단점 : 범위 질의 효율성 ↓ 정렬 순서 유지 x</li></ul></li><li>사용 예<ul><li>Riak, Couchbase, Voldmort, MongoDB (<a href="https://docs.mongodb.com/manual/core/hashed-sharding/">해시기반 샤딩 모드</a>)</li><li>Cassandra : 해시값 + 범위 기준 파티셔닝 전략 타협안 사용 (=&gt; 복합 기본키)</li></ul></li></ul><h3 id="쏠린-작업부하와-핫스팟-완화"><a href="#쏠린-작업부하와-핫스팟-완화" class="headerlink" title="쏠린 작업부하와 핫스팟 완화"></a>쏠린 작업부하와 핫스팟 완화</h3><img src="https://user-images.githubusercontent.com/26691216/119422588-64b1e680-bd3c-11eb-9197-9f680970d428.gif" width=150><center style="color:lightgray;"><i>(암호화폐는 유망하지만 투자는 조심혔어야재-)</i></center><ul><li>핫스팟을 완전히 제거할 수는 없다<ul><li>극단적 상황의 작업부하 (ex. 유명인의 SNS 활동의 영향 =&gt; 동일 id이므로 해싱 소용 x)</li></ul></li><li>현대 데이터 시스템은 skew에 대한 자동 보정이 어려움<ul><li>대부분 어플리케이션 단에서 완화</li><li>이로 인한 불필요한 오버헤드는 방지할 것 (세분화)</li><li>=&gt; <em>트레이드 오프를 따져볼 것</em></li></ul></li></ul><br/><h2 id="06-2-파티셔닝과-보조-색인"><a href="#06-2-파티셔닝과-보조-색인" class="headerlink" title="06-2 파티셔닝과 보조 색인"></a>06-2 파티셔닝과 보조 색인</h2><ul><li>키-값 데이터모델에 의존한 파티셔닝 방식은 명확함<ul><li>기본키를 통한 레코트 식별</li></ul></li><li>여기에 <strong>보조 색인</strong> 이 연관되면? =&gt; 파티션에 깔끔하게 대응되지 x<ul><li>보조 색인 : 특정한 값이 발생한 항목을 검색하는 수단</li><li>데이터 모델링에 유용 (관계형, 문서 데이터베이스에서도 흔히 사용)</li></ul></li><li>보조 색인이 있는 데이터베이스 색인 방식 2가지<ul><li>문서 기반 파티셔닝 (local index)</li><li>용어 기반 파티셔닝 (global index)</li></ul></li></ul><h3 id="문서-기준-보조-색인-파티셔닝"><a href="#문서-기준-보조-색인-파티셔닝" class="headerlink" title="문서 기준 보조 색인 파티셔닝"></a>문서 기준 보조 색인 파티셔닝</h3><img src="https://user-images.githubusercontent.com/26691216/119423722-e4d94b80-bd3e-11eb-9c1f-891bb225682d.png" width=400><ul><li>문서 파티셔닝 색인 (지역 색인, local index)<ul><li>각 파티션은 자신의 보조 색인을 유지</li><li>보조 색인도 그 파티션이 속하는 문서만 담당</li><li>즉, 문서 CUD 시 쓰려고하는 파티션만 다루면 된다</li></ul></li><li>장단점<ul><li>장점 : write =&gt; 파티션의 보조색인이 100% 독립적</li><li>단점 : read 시 <strong>모든</strong> 파티션으로 요청 + 취합 과정 필요 (scatter/gather)<ul><li>꼬리 지연 시간 증폭 발생 가능성</li><li>질의가 단일 파티션에서만 실행되도록 권장되지만 어렵다 (특히 한번에 여러 보조 색인 사용시)</li></ul></li></ul></li><li>사용 예<ul><li>MongoDB, Riak, Cassandra, Elasticsearch, SolrCloud, VoltDB</li></ul></li></ul><h3 id="용어-기준-보조-색인-파티셔닝"><a href="#용어-기준-보조-색인-파티셔닝" class="headerlink" title="용어 기준 보조 색인 파티셔닝"></a>용어 기준 보조 색인 파티셔닝</h3><img src="https://user-images.githubusercontent.com/26691216/119423728-ea369600-bd3e-11eb-825f-667157e56a21.png" width=400><ul><li>용어 기준 파티셔닝 색인 (전역 색인, global index)<ul><li>“용어 기준으로 파티셔닝되다 (term-partitioned)”</li><li>용어 = 문서에 등장하는 모든 단어. from 전문 색인 (특별한 종류의 보조 색인)</li></ul></li><li>전역 색인도 파티셔닝은 필요<ul><li>한 노드에 저장시 병목 발생</li><li>방법 : 용어 자체 사용 (범위 스캔 good) or 용어 해시값 사용 (분산 good)</li></ul></li><li>장단점<ul><li>장점 : read =&gt; 모든 파티션에 질의 할 필요 x</li><li>단점 : write가 복잡하고 느림 (여러 파티션에 영향)<ul><li>색인을 항상 최신상태로 유지하려면 =&gt; 쓰기에 영향받는 모든 파티션에 대한 ‘분산 트랜잭션’ 필요</li><li>실제로는 대부분 비동기로 갱신</li></ul></li></ul></li><li>사용 예<ul><li>Riak 검색, Oracle Warehouse (지역/전역 선택 가능)</li></ul></li></ul><br/><h2 id="06-3-파티션-재균형화"><a href="#06-3-파티션-재균형화" class="headerlink" title="06-3 파티션 재균형화"></a>06-3 파티션 재균형화</h2><ul><li>재균형화 (리밸런싱, Rebalancing)<ul><li>장비의 추가/제거로 인해 데이터와 요청을 다른노드로 옮기는 과정</li></ul></li><li>재균형화의 최소 요구사항<ol><li> 리밸런싱 후 부하가 노드간 균등하게 분배될 것</li><li> 리밸런싱 중에도 읽기/쓰기 요청을 받아들일 것</li><li> 리밸런싱 소요 시간과 네트워크, 디스크 IO 부하를 최소화 할 것 (이동 데이터 최소화)</li></ol></li></ul><h3 id="재균형화-전략"><a href="#재균형화-전략" class="headerlink" title="재균형화 전략"></a>재균형화 전략</h3><ul><li>파티션을 노드에 (새로) 할당하는 방법 3가지</li><li>(나쁜 예 : mod N 연산 =&gt; N 변경시 대부분의 데이터가 이동되어야함)</li></ul><blockquote><h4 id="파티션-개수-고정"><a href="#파티션-개수-고정" class="headerlink" title="파티션 개수 고정"></a>파티션 개수 고정</h4><p>파티션 크기 ∝ 전체 데이터셋 크기</p></blockquote><ul><li>파티션을 노드 대수보다 많이 만들어서 각 노드당 여러 파티션을 할당</li><li>노드 추가/제거 시) 기존 노드에서 파티션 몇개를 뺏어옴<ul><li>파티션은 노드 사이에서 통째로 이동 (파티션 개수 및 내용 유지)</li><li>네트워크를 통해 데이터 이동 (시간 소요) =&gt; 리밸런싱 중 요청은 기존 할당된 파티션 사용</li></ul></li><li>장단점<ul><li>장점 : 파티션 통째로 이동. 바뀌는점은 “어느 노드에 어느 파티션이 할당되었나” 뿐</li><li>단점 : 파티션 수는 고정인데 데이터셋 크기 변동이 심할 경우 =&gt; 적절한 파티션 수 지정 어려움<ul><li>대부분 처음 설정된 파티션 수 = 사용 가능한 노드 대수의 최대치</li><li>파티션이 너무 작으면 오버헤드↑, 너무 크면 재균형화와 노드 장애 시 복구 비용↑</li></ul></li></ul></li><li>사용 예<ul><li>Riak, ES, CouchBase, Voldmort</li></ul></li></ul><blockquote><h4 id="동적-파티셔닝"><a href="#동적-파티셔닝" class="headerlink" title="동적 파티셔닝"></a>동적 파티셔닝</h4><p>파티션 크기 ∝ 데이터 셋</p></blockquote><ul><li>파티션 개수가 고정되면 문제가 생기는 경우 (ex. 키 범위 파티셔닝)</li><li>동적 파티셔닝<ul><li>파티션 크기가 설정된 값을 넘어서면 두개로 쪼갬</li><li>파티션 크기가 임곗값 아래로 떨어지면 인접한 파티션과 합침 (like B트리)</li></ul></li><li>사전 분할(pre-splitting)<ul><li>빈 데이터베이스의 초기 파티션 집합 설정</li></ul></li><li>장단점<ul><li>장점 : 전체 데이터양에 맞게 조정되는 적절한 파티션 수 (오버헤드 ↓)</li><li>단점 : 시작 시에는 파티션이 하나 (사전정보 x)</li></ul></li><li>사용 예<ul><li>HBase, RethinkDB (키 범위), MongoDB (&gt;2.4, 키 범위 &amp; 해시)</li></ul></li></ul><blockquote><h4 id="노드-비례-파티셔닝"><a href="#노드-비례-파티셔닝" class="headerlink" title="노드 비례 파티셔닝"></a>노드 비례 파티셔닝</h4><p>파티션 개수 ∝ 노드 대수</p></blockquote><ul><li>노드당 할당되는 파티션 개수를 고정<ul><li>노드 대수가 동일하면 (= 파티션 개수 고정)</li><li>노드 대수가 증가하면 =&gt; 파티션 수 ↓ (절반은 두고 절반은 새 노드에 할당)</li></ul></li><li>장단점<ul><li>장점 : 개별 파티션 크기가 안정적</li><li>단점 : 신규 노드 추가로 인한 파티션 분할 시 무작위 분할 =&gt; 균등하지 않은 분할 가능성<ul><li>무작위 분할 =&gt; 해시 기반 파티셔닝 사용 (=일관성 해싱)</li></ul></li></ul></li></ul><h3 id="운영-자동-재균형화와-수동-재균형화"><a href="#운영-자동-재균형화와-수동-재균형화" class="headerlink" title="운영: 자동 재균형화와 수동 재균형화"></a>운영: 자동 재균형화와 수동 재균형화</h3><ul><li>재균형화는 자동으로해야할까 수동으로해야할까?<ul><li>완전 자동 재균형화 vs 완전 수동 재균형화</li><li>그 중간 어디쯤.. =&gt; 시스템이 자동으로 파티션 할당을 제안하고 + 관리자가 확정해야 반영되는</li></ul></li><li>자동 재균형화<ul><li>편리하지만, 예측이 어렵고 성능 저하 이슈나 연쇄 장애 가능성</li></ul></li><li>수동 재균형화<ul><li>느리지만 예상치 못한 이슈 방지 가능</li></ul></li></ul><br/><h2 id="06-4-요청-라우팅"><a href="#06-4-요청-라우팅" class="headerlink" title="06-4 요청 라우팅"></a>06-4 요청 라우팅</h2><p>“Service Discovery”</p><ul><li>Service Discovery 접근법 (라우팅 방법) 3가지<ul><li>노드 : 아무 노드나 읽어서 어느 노드에 있는지 찾아서 요청</li><li>라우팅 계층 : 모든 요청을 라우팅 계층으로 보내서 전달 (Partition-aware LB)</li><li>클라이언트 : 클라Client가 파티셔닝 방법 및 할당 위치를 알고 직접 해당 노드에 요청</li></ul></li><li>핵심 문제는? =&gt; <strong><em>“파티션의 변경 사항을 어떻게 알것인가”</em></strong><ul><li>외부의 별도 코디네이션 (ex. Zookeeper) 사용 : 변경사항에 대해 모든걸 관리하고 알려줌</li><li>가십 프로토콜 (gossip protocol): 클러스터 상태 변화를 노드 사이에 퍼뜨림. 노드 복잡도 ↑ 외부의존도 ↓</li></ul></li></ul><h3 id="병렬-질의-실행"><a href="#병렬-질의-실행" class="headerlink" title="병렬 질의 실행"></a>병렬 질의 실행</h3><ul><li>더 복잡한 종류의 질의 (분석용)<ul><li>=&gt; 대규모 병렬 처리 (MPP, Massively Parallel Processing) 관계형 DB</li></ul></li><li>MPP 질의 최적화기가 복잡한 질의를 분해하여 서로 다른 노드에서 병렬적 실행 가능하게함<ul><li>웨어하우스 질의 (join, filter, grouping, aggregation)</li></ul></li><li>데이터 웨어하우스 질의 고속 병렬 실행</li></ul><br/><h2 id="06-정리"><a href="#06-정리" class="headerlink" title="06 정리"></a>06 정리</h2><ul><li>파티셔닝이란<ul><li>대용량 데이터셋을 더욱 작은 데이터셋으로 파티셔닝</li></ul></li><li>파티셔닝의 목적<ul><li>핫스팟이 생기지 않게 + 데이터와 질의부하를 균일하게 분배</li></ul></li><li>주요 파티셔닝 기법 2가지<ul><li>키 범위 파티셔닝 (보통 동적)</li><li>해시 파티셔닝 (보통 고정 파티션수)</li></ul></li><li>파티셔닝 + 보조 색인<ul><li>문서 파티셔닝 색인 (지역)</li><li>용어 파티셔닝 색인 (전역)</li></ul></li><li>질의 라우팅 기법</li></ul>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;데이터 중심 어플리케이션 설계 [PART 2]&lt;/strong&gt;&lt;br&gt;Designing Data Intensive Applications - O’REILLY&lt;/p&gt;
+&lt;p&gt;06. Partitioning&lt;/p&gt;
+&lt;</summary>
+      
+    
+    
+    
+    <category term="ddia" scheme="https://minsw.github.io/categories/ddia/"/>
+    
+    
+    <category term="data" scheme="https://minsw.github.io/tags/data/"/>
+    
+    <category term="data_intensive_application" scheme="https://minsw.github.io/tags/data-intensive-application/"/>
+    
+    <category term="ddia" scheme="https://minsw.github.io/tags/ddia/"/>
+    
+    <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="stady" scheme="https://minsw.github.io/tags/stady/"/>
+    
+  </entry>
   
   <entry>
     <title>&amp;#039;데이터 중심 어플리케이션 설계&amp;#039; 2장 - 데이터 모델과 질의 언어</title>
@@ -38,13 +73,13 @@
     <category term="ddia" scheme="https://minsw.github.io/categories/ddia/"/>
     
     
-    <category term="book" scheme="https://minsw.github.io/tags/book/"/>
-    
     <category term="data" scheme="https://minsw.github.io/tags/data/"/>
     
     <category term="data_intensive_application" scheme="https://minsw.github.io/tags/data-intensive-application/"/>
     
     <category term="ddia" scheme="https://minsw.github.io/tags/ddia/"/>
+    
+    <category term="book" scheme="https://minsw.github.io/tags/book/"/>
     
     <category term="stady" scheme="https://minsw.github.io/tags/stady/"/>
     
@@ -72,13 +107,13 @@
     <category term="ddia" scheme="https://minsw.github.io/categories/ddia/"/>
     
     
-    <category term="book" scheme="https://minsw.github.io/tags/book/"/>
-    
     <category term="data" scheme="https://minsw.github.io/tags/data/"/>
     
     <category term="data_intensive_application" scheme="https://minsw.github.io/tags/data-intensive-application/"/>
     
     <category term="ddia" scheme="https://minsw.github.io/tags/ddia/"/>
+    
+    <category term="book" scheme="https://minsw.github.io/tags/book/"/>
     
     <category term="stady" scheme="https://minsw.github.io/tags/stady/"/>
     
@@ -107,9 +142,9 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
-    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
     
@@ -140,9 +175,9 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
-    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
     
@@ -172,9 +207,9 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
-    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
     
@@ -204,9 +239,9 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
-    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
     
@@ -236,9 +271,9 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
-    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
     
@@ -270,9 +305,9 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
-    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
     
@@ -303,9 +338,9 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
-    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
     
@@ -340,9 +375,9 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
-    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
     
@@ -373,9 +408,9 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
-    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
     
@@ -406,9 +441,9 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
-    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
     
@@ -438,9 +473,9 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
-    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
     
@@ -470,9 +505,9 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
-    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
     
@@ -501,9 +536,9 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
-    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="spark" scheme="https://minsw.github.io/tags/spark/"/>
     
@@ -533,9 +568,9 @@
     <category term="spark" scheme="https://minsw.github.io/categories/spark/"/>
     
     
-    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
     <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
+    <category term="study" scheme="https://minsw.github.io/tags/study/"/>
     
     <category term="summarization" scheme="https://minsw.github.io/tags/summarization/"/>
     
@@ -636,11 +671,11 @@
     <category term="kotlin" scheme="https://minsw.github.io/categories/kotlin/"/>
     
     
+    <category term="book" scheme="https://minsw.github.io/tags/book/"/>
+    
     <category term="kotlin" scheme="https://minsw.github.io/tags/kotlin/"/>
     
     <category term="study" scheme="https://minsw.github.io/tags/study/"/>
-    
-    <category term="book" scheme="https://minsw.github.io/tags/book/"/>
     
     <category term="summarization" scheme="https://minsw.github.io/tags/summarization/"/>
     
