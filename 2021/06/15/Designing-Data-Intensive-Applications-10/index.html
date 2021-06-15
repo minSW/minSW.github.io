@@ -1,0 +1,705 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> &#039;데이터 중심 어플리케이션 설계&#039; 10장 - 일괄 처리 · Look out</title><meta name="description" content="&amp;#039;데이터 중심 어플리케이션 설계&amp;#039; 10장 - 일괄 처리 - Lukka Min"><meta name="og:image" content="https://minsw.github.io/images/og_image.png"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/cover.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link rel="search" type="application/opensearchdescription+xml" href="https://minsw.github.io/atom.xml" title="Look out"><script src="//code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script><meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Look out" type="application/atom+xml">
+</head><body><div class="wrap"><header><a class="logo-link" href="/"><img src="/cover.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a class="nav-list-link" href="/" target="_self">BLOG</a></li><li class="nav-list-item"><a class="nav-list-link" href="/archives/" target="_self">ARCHIVE</a></li><li class="nav-list-item"><a class="nav-list-link" href="/tags/" target="_self">TAG</a></li><li class="nav-list-item"><a class="nav-list-link" href="https://github.com/minSW" target="_blank">GITHUB</a></li></ul></header><main class="container"></main><div class="post"><article class="post-block"><h1 class="post-title">&#039;데이터 중심 어플리케이션 설계&#039; 10장 - 일괄 처리</h1><div class="post-info">2021년 6월 15일<span class="categories"><i class="fa fa-bookmark" aria-hidden="true"></i></span><a class="post-category" href="/categories/ddia/">#ddia</a></div><div class="post-content"><blockquote>
+<p><strong>데이터 중심 어플리케이션 설계 [PART 2]</strong><br>Designing Data Intensive Applications - O’REILLY</p>
+<p>10. Batch Processing</p>
+</blockquote>
+<br/>
+
+
+<h4 id="Part-3-파생"><a href="#Part-3-파생" class="headerlink" title="[Part 3] 파생"></a>[Part 3] 파생</h4><blockquote>
+<p>특정 데이터셋에서 다른 데이터셋을 파생하는 시스템 (주로 in 이종 시스템)</p>
+<ul>
+<li>10장 : 맵리듀스와 같은 일괄 처리 방식 데이터플로 시스템, 관련된 도구, 대규모 데이터 시스템을 구축하기 위한 원리</li>
+<li>11장 : 데이터 스트림에 적용한 동일 아이디어</li>
+<li>12장 : 책의 결론 (for Reliable, Scalable, and Maintainable Applications)</li>
+</ul>
+</blockquote>
+<p>1, 2부에서는 분산 데이터베이스로 가기 위해 고려해야할 모든 주요 사항을 다룸 (in 단일 데이터베이스)<br>3부에서는 데이터 모델도, 최적화된 접근 방식도 다른 여러 데이터 시스템을 <strong>일관성 있는 하나의 애플리케이션 아키텍처로 통합</strong> 문제 검토</p>
+<details>
+<summary class="point-color-can-hover"> 💡 레코드 시스템과 파생 데이터 시스템? </summary>
+
+<ul>
+<li>레코드 시스템<ul>
+<li>진실의 근원 (source of truth)</li>
+<li>일반적으로 정규화를 거쳐 정확하게 한번 표현</li>
+</ul>
+</li>
+<li>파생 데이터 시스템<ul>
+<li>원천 데이터를 가져와 특정 방식으로 변환하고 처리한 결과 (ex. 캐시)</li>
+<li>비정규화 값, 색인, 구체화 뷰, 추천 시스템의 예측 요약 데이터</li>
+<li>파생 데이터 특징<ul>
+<li>중복(redundant) =&gt; 기존 데이터를 복제</li>
+<li>대개 비정규화 과정으로 생성</li>
+<li>단일 원천 데이터로 여러 데이터셋을 추출해 각 데이터셋마다 서로 다른 “관점”으로 데이터를 봄</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>레코드 시스템 vs 파생 데이터 시스템<ul>
+<li>구분하면 시스템 전체 데이터플로가 명확해짐 (입출력 형태, 의존 관계 등)</li>
+<li>애플리케이션에서 어떻게 사용할지에 따라 결정됨 (데이터베이스에 따라 결정 x. it’s 단지 도구)</li>
+</ul>
+</li>
+<li>시스템 아키텍처를 망치지 않고 명료성을 갖추려면 <em>“데이터가 어떤 데이터로부터 파생되었는지 명확히 해야함”</em> =&gt; 3부 주제</details>
+
+</li>
+</ul>
+<br/>
+
+<hr>
+<br/>
+
+
+<h3 id="📖-Overview"><a href="#📖-Overview" class="headerlink" title="📖 Overview"></a>📖 Overview</h3><p><a href="#10-1-%EC%9C%A0%EB%8B%89%EC%8A%A4-%EB%8F%84%EA%B5%AC%EB%A1%9C-%EC%9D%BC%EA%B4%84-%EC%B2%98%EB%A6%AC%ED%95%98%EA%B8%B0">10-1. 유닉스 도구로 일괄 처리하기</a></p>
+<ul>
+<li><a href="#%EB%8B%A8%EC%88%9C-%EB%A1%9C%EA%B7%B8-%EB%B6%84%EC%84%9D">단순 로그 분석</a></li>
+<li><a href="#%EC%9C%A0%EB%8B%89%EC%8A%A4-%EC%B2%A0%ED%95%99">유닉스 철학</a><br><a href="#10-2-%EB%A7%B5%EB%A6%AC%EB%93%80%EC%8A%A4%EC%99%80-%EB%B6%84%EC%82%B0-%ED%8C%8C%EC%9D%BC-%EC%8B%9C%EC%8A%A4%ED%85%9C">10-2. 맵리듀스와 분산 파일 시스템</a></li>
+<li><a href="#%EB%A7%B5%EB%A6%AC%EB%93%80%EC%8A%A4-%EC%9E%91%EC%97%85-%EC%8B%A4%ED%96%89%ED%95%98%EA%B8%B0">맵리듀스 작업 실행하기</a></li>
+<li><a href="#%EB%A6%AC%EB%93%80%EC%8A%A4-%EC%82%AC%EC%9D%B4%EB%93%9C-%EC%A1%B0%EC%9D%B8%EA%B3%BC-%EA%B7%B8%EB%A3%B9%ED%99%94">리듀스 사이드 조인과 그룹화</a></li>
+<li><a href="#%EB%A7%B5-%EC%82%AC%EC%9D%B4%EB%93%9C-%EC%A1%B0%EC%9D%B8">맵 사이드 조인</a></li>
+<li><a href="#%EC%9D%BC%EA%B4%84-%EC%B2%98%EB%A6%AC-%EC%9B%8C%ED%81%AC%ED%94%8C%EB%A1%9C%EC%9D%98-%EC%B6%9C%EB%A0%A5">일괄 처리 워크플로의 출력</a></li>
+<li><a href="#%ED%95%98%EB%91%A1%EA%B3%BC-%EB%B6%84%EC%82%B0-%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4%EC%9D%98-%EB%B9%84%EA%B5%90">하둡과 분산 데이터베이스의 비교</a><br><a href="#10-3-%EB%A7%B5%EB%A6%AC%EB%93%80%EC%8A%A4%EB%A5%BC-%EB%84%98%EC%96%B4">10-3. 맵리듀스를 넘어</a></li>
+<li><a href="#%EC%A4%91%EA%B0%84-%EC%83%81%ED%83%9C-%EA%B5%AC%EC%B2%B4%ED%99%94">중간 상태 구체화</a></li>
+<li><a href="#%EA%B7%B8%EB%9E%98%ED%94%84%EC%99%80-%EB%B0%98%EB%B3%B5-%EC%B2%98%EB%A6%AC">그래프와 반복 처리</a></li>
+<li><a href="#%EA%B3%A0%EC%88%98%EC%A4%80-API%EC%99%80-%EC%96%B8%EC%96%B4">고수준 API와 언어</a></li>
+</ul>
+<p><a href="#10-%EC%A0%95%EB%A6%AC">10 정리</a></p>
+<p><a href="#Reference">Reference</a></p>
+<br/>
+
+
+<h1 id="10장-일괄-처리"><a href="#10장-일괄-처리" class="headerlink" title="10장 일괄 처리"></a>10장 일괄 처리</h1><ul>
+<li>시스템의 유형 3가지 구분<ul>
+<li>서비스 (온라인 시스템)<ul>
+<li>클라이언트로부터 요청/지시가 올 때까지 대기</li>
+<li>성능 측정 지표 = 응답 시간 (+ 가용성)</li>
+</ul>
+</li>
+<li><strong>일괄 처리 시스템 (오프라인 시스템)</strong><ul>
+<li>큰 입력 데이터를 받아 처리하는 작업을 수행하고 결과 데이터 생산 (Scheduling)</li>
+<li>성능 측정 지표 = 처리량</li>
+</ul>
+</li>
+<li>스트림 처리 시스템 (준실시간 시스템)<ul>
+<li>준실시간 처리(near-real-time processing, nearline processing)</li>
+<li>입력 이벤트 발생 직후, 입력 데이터 소비 및 출력 데이터 생산 =&gt; 지연시간 ↓</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>맵 리듀스 (MapReduce)<ul>
+<li>“구글을 대규모로 확장 가능하게 만든 알고리즘”</li>
+<li>ex. 하둡, 카우치DB, 몽고DB</li>
+<li>병렬 처리 시스템보다 저수준이지만 데이터 규모면에서 상당히 진보</li>
+</ul>
+</li>
+<li>표준 유닉스 도구<ul>
+<li>유닉스의 철학이 대규모 이기종 분산 시스템으로 그대로 이어짐</li>
+</ul>
+</li>
+</ul>
+<br/>
+
+<h2 id="10-1-유닉스-도구로-일괄-처리하기"><a href="#10-1-유닉스-도구로-일괄-처리하기" class="headerlink" title="10-1 유닉스 도구로 일괄 처리하기"></a>10-1 유닉스 도구로 일괄 처리하기</h2><h3 id="단순-로그-분석"><a href="#단순-로그-분석" class="headerlink" title="단순 로그 분석"></a>단순 로그 분석</h3><ul>
+<li><code>awk</code>, <code>sed</code>, <code>grep</code>, <code>sort</code>, <code>uniq</code>, <code>xargs</code> 조합으로 데이터 분석이 놀라울 정도로 잘 수행됨</li>
+<li>예제<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /var/log/nginx/access.log</span></span><br><span class="line"><span class="comment"># format : $remote_addr - $remote_user [$time_local] &quot;$request&quot; $status $body_bytes_sent &quot;$http_referer&quot; &quot;$http_user_agent&quot; </span></span><br><span class="line"><span class="comment"># (sample) 216.xx.xx.xx - - [27/Feb/2015:17:55:11 +0000] &quot;GET /css/typrography.css HTTP/1.1&quot; 200 3377 &quot;http://...com&quot; &quot;Mozilla/5.0 (.....)</span></span><br><span class="line"></span><br><span class="line">cat /var/<span class="built_in">log</span>/nginx/access.log | \</span><br><span class="line">  awk <span class="string">&#x27;&#123;print $7&#125;&#x27;</span> | \ <span class="comment"># 7번째 필드 출력 ($0은 전체)</span></span><br><span class="line">  sort  | \ <span class="comment"># 정렬</span></span><br><span class="line">  uniq -c | \ <span class="comment"># 중복 제거 (&#x27;-c&#x27;: 중복횟수 첫번째로 함께 출력) </span></span><br><span class="line">  sort -r -n | \ <span class="comment"># 정렬 (&#x27;-r&#x27;: 내림차순, &#x27;-n&#x27; : 숫자로 정렬)</span></span><br><span class="line">  head -n 5 <span class="comment"># 맨 앞 5줄만 출력</span></span><br></pre></td></tr></table></figure></li>
+<li>유닉스 연쇄 명령 vs 맞춤형 프로그램<ul>
+<li>취향의 문제 (간결성, 가독성 등)</li>
+<li>단, 실행 흐름은 크게 다름</li>
+</ul>
+</li>
+<li>정렬 vs 인메모리 집계<ul>
+<li>유닉스 파이프라인 : 해시 테이블 x 정렬된 목록에서 같은 url 반복 노출</li>
+<li>맞춤형 프로그램 (ex. 스크립트) : 해시 테이블을 메모리에 유지</li>
+<li>뭐가 더 적합한가? =&gt; 작업 세트 (임의 접근이 필요한 메모리양) 에 따라<ul>
+<li>작업세트가 작으면 인메모리 해시 테이블도 ok</li>
+<li>작업세트가 허용 메모리보다 크면 정렬 접근법 권장 (디스크를 효율적으로 사용하는 병합 정렬)</li>
+</ul>
+</li>
+<li>리눅스에 포함된 sort 유틸리티는 메모리보다 큰 데이터셋을 자동으로 디스크로 보내고 여러 CPU 코어에서 병렬로 정렬 =&gt; 손 쉽게 큰 데이터 셋으로 확장 가능</li>
+</ul>
+</li>
+</ul>
+<h3 id="유닉스-철학"><a href="#유닉스-철학" class="headerlink" title="유닉스 철학"></a>유닉스 철학</h3><ul>
+<li>유닉스 파이프<ul>
+<li><em>“다른방법으로 데이터 처리가 필요할 때 정원 호스와 같이 여러 다른 프로그램을 연결하는 방법이 필요하다. 이것은 I/O 방식이기도 하다. (Dog McIlory, 1964)”</em></li>
+</ul>
+</li>
+<li>유닉스 철학 (1978)<ul>
+<li>(1) 각 프로그램이 한가지 일만 하도록 작성</li>
+<li>(2) 모든 프로그램의 출력은 아직 알려지지 않은 다른 프로그램의 입력으로 쓸 수 있다고 생각할 것 (출력에는 필요한 정보만. 입력 형식을 엄격하게 맞추거나 이진 형태 x, 대화형 입력 고집 x)</li>
+<li>(3) S/W와 OS는 빠르게 써볼 수 있게 설계/구축</li>
+<li>(4) 프로그래밍 작업을 줄이려면 미숙한 도움보다는 도구를 사용</li>
+</ul>
+</li>
+<li>=&gt; Agile, DevOps 와 매우 흡사</li>
+<li>유닉스 도구들은 유연하게 조합할 수 있고 조합하여 사용했을 때 강력<ul>
+<li>유닉스의 결합성 &lt;= <strong>동일 인터페이스</strong></li>
+</ul>
+</li>
+</ul>
+<h4 id="유닉스-철학-동일-인터페이스"><a href="#유닉스-철학-동일-인터페이스" class="headerlink" title="[유닉스 철학] 동일 인터페이스"></a>[유닉스 철학] 동일 인터페이스</h4><ul>
+<li>특정 출력을 다른 <strong>어떤</strong> 프로그램의 입력으로 쓰려면 (2) =&gt; <strong>모두</strong> 호환 가능한 인터페이스를 사용해야 함<ul>
+<li>동일 인터페이스 예 : 파일, URL, HTTP</li>
+</ul>
+</li>
+<li>유닉스의 인터페이스 =&gt; 파일 (파일 디스크립터)<ul>
+<li>파일은 단지 순서대로 정렬된 바이트 연속. 여러가지 것 함께 표현 가능</li>
+<li>ex. 실제 파일, 프로세스 간 통신채널(유닉스 소켓, stdin, stdout), 장치 드라이버, TCP 연결 소켓 등..</li>
+</ul>
+</li>
+<li>아스키(Ascii) 텍스트<ul>
+<li>관례상 많은 유닉스 프로그램들이 연속된 바이트를 아스키 텍스트 취급</li>
+<li>같은 레코드 분리자(\n) 사용하는 유닉스 유틸리티 =&gt; 상호 운용 가능<ul>
+<li>0x0A, LF, Line feed(Ctrl + J)</li>
+<li>0x1E, RS, Record Separator(Ctrl + ^)</li>
+</ul>
+</li>
+<li>큰 문제는 없지만 그다지 깔끔하지는 x</li>
+</ul>
+</li>
+<li>데이터베이스<ul>
+<li>동일한 데이터 모델인 데이터베이스 간에도 데이터 이동이 쉽지않음 (통합 부족)</li>
+<li>데이터 발칸화(Balkanization) : 인터넷이 고립된 여러 섬처럼 나뉜 현상이나 프로그램 언어나 데이터 파일 포맷등이 분화 발전하는 현상</li>
+</ul>
+</li>
+</ul>
+<h4 id="유닉스-철학-로직과-연결의-분리"><a href="#유닉스-철학-로직과-연결의-분리" class="headerlink" title="[유닉스 철학] 로직과 연결의 분리"></a>[유닉스 철학] 로직과 연결의 분리</h4><ul>
+<li>표준 입력(stdin), 표준 출력(stdout) 사용<ul>
+<li>유닉스 도구의 또 다른 특징</li>
+<li>한 프로세스의 stdout 을 다른 프로세스의 stdin 과 연결 =&gt; 중간 데이터 디스크에 쓰지않고 <strong>작은 인메모리 버퍼</strong> 사용하여 전달</li>
+</ul>
+</li>
+<li>입출력이 어떻게 이루어지는지 신경 쓸 필요 x<ul>
+<li>느슨한 결합 (loose coupling)</li>
+<li>지연 바인딩 (late binding)</li>
+<li>제어 반전 (inverse of control)</li>
+</ul>
+</li>
+<li>직접 작성한 프로그램을 끼워넣어 os 지원 도구처럼 사용 가능</li>
+<li>제약 사항<ul>
+<li>여러 개의 입력을 받거나 여러 개의 출력이 필요한 경우 사용이 까다로움<ul>
+<li>출력을 파이프를 이용해 네트워크와 연결 불가 (without <code>netcat</code>, <code>curl</code>)</li>
+</ul>
+</li>
+<li>프로그램의 I/O가 프로그램 자체와 서로 묶이는 경우<ul>
+<li>프로그램이 파일을 직접 열어 읽고 쓰거나, 서브 프로세스로 다른 프로그램 구동하거나, 네트워크 연결하거나</li>
+<li>입출력 연결하는 유연성 감소</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="유닉스-철학-투명성과-실험"><a href="#유닉스-철학-투명성과-실험" class="headerlink" title="[유닉스 철학] 투명성과 실험"></a>[유닉스 철학] 투명성과 실험</h4><ul>
+<li>유닉스 도구는 불친절하고 단순하지만, 진행 사항 파악이 쉬움<ul>
+<li>일반적으로 입력파일은 불변 처리</li>
+<li>어느 시점이든 파이프라인 중단하고 출력 확인 가능 (<code>less</code>)</li>
+<li>특정 파이프라인 단계의 출력을 파일에 쓰고, 다음 단계에 입력으로 사용 가능 (재시작 good)</li>
+</ul>
+</li>
+<li>가장 큰 제약은 <strong>단일 장비</strong> 에만 실행된다는 점<ul>
+<li>=&gt; 하둡같은 도구가 필요한 이유</li>
+</ul>
+</li>
+</ul>
+<br/>
+
+<h2 id="10-2-맵리듀스와-분산-파일-시스템"><a href="#10-2-맵리듀스와-분산-파일-시스템" class="headerlink" title="10-2 맵리듀스와 분산 파일 시스템"></a>10-2 맵리듀스와 분산 파일 시스템</h2><ul>
+<li>유닉스 도구와 비슷하지만 <strong>수천 대의 장비로 분산 실행</strong> 가능<ul>
+<li>입력 수정 x =&gt; 부수 효과 x</li>
+<li>출력 파일은 순차적으로 한번씩만 작성 (수정 x)</li>
+</ul>
+</li>
+<li>입출력<ul>
+<li>유닉스 도구 : stdin / stdout</li>
+<li>맵리듀스 : 분산 파일 시스템 상의 파일 (하둡 =&gt; HDFS)</li>
+</ul>
+</li>
+<li>분산 파일 시스템<ul>
+<li><strong>HDFS</strong> (Haddop Distributed File System)</li>
+<li>GlusterFS, OFS(Quantcast File)</li>
+<li>AWS S3, Azure Blob Storage, Openstack Swift (객체저장소)</li>
+</ul>
+</li>
+<li>HDFS는 비공유 원칙 기반<ul>
+<li>비공유 아키텍처 (shared-nothing, scale out)<ul>
+<li>일반적 데이터센터 네트워크에 연결된 컴퓨터면 충분</li>
+</ul>
+</li>
+<li>vs 공유 디스크 방식<ul>
+<li>NAS(network Attached Storage), SAN(Storage Area Network)</li>
+<li>중앙 집중 저장 장치를 위한 맞춤 하드웨어나 특별한 네트워크 인프라 필요</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>HDFS는 개념적으로 큰 하나의 파일 시스템<ul>
+<li>각 장비에서 실행되는 데몬 프로세스로 구성 =&gt; 다른 노드가 해당 장비의 파일에 접근 가능하게끔 네트워크 서비스 제공</li>
+<li>데몬이 실행중인 모든 장비의 디스크 사용 가능</li>
+<li>중앙서버 (네임노드, NameNode)가 파일 블록이 저장된 장비 위치 추적</li>
+</ul>
+</li>
+<li>HDFS는 뛰어난 확장성<ul>
+<li>대규모 확장 가능 (범용 하드웨어 + 오픈소스 소프트웨어로 훨씬 저렴한 비용)</li>
+</ul>
+</li>
+<li>파일 블록 복제<ul>
+<li>여러 장비에 동일 데이터 복사 [5장]</li>
+<li><strong>삭제 코딩(erasure coding)</strong> 방식으로 적은 부담으로 손실된 데이터 복구 (like RAID)</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<h4 id="삭제-코딩-erasure-coding"><a href="#삭제-코딩-erasure-coding" class="headerlink" title="삭제 코딩 (erasure coding)"></a>삭제 코딩 (erasure coding)</h4><p>n개의 데이터 셀에서 k개의 패러티 셀 데이터로 인코딩하고,<br>데이터 손실시 디코딩 과정을 거쳐 원본 데이터를 복구하는 <strong>데이터 복구 기법</strong> 중 하나 (백업 목적 X)<br>(XOR 방식, Reed-Solomon(RS) code)</p>
+<p>장점</p>
+<ul>
+<li>스토리지 효율성 👍🏻: n/(n+k) </li>
+<li>(단, EC는 데이터 크기에 따라 Namenode에 더욱 많은 블록 정보를 관리를 요구하게 됨으로 오버헤드 존재)</li>
+</ul>
+<p>제약사항</p>
+<ul>
+<li>지역성(data locality) x </li>
+<li>overwrite가 많은 환경엔 추천 x</li>
+<li>4개 이상의 노드일때만 사용 가능</li>
+</ul>
+<p>reference</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://joonyon.tistory.com/148">https://joonyon.tistory.com/148</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=f9ntIbw43xI">https://www.youtube.com/watch?v=f9ntIbw43xI</a></li>
+</ul>
+</blockquote>
+<h3 id="맵리듀스-작업-실행하기"><a href="#맵리듀스-작업-실행하기" class="headerlink" title="맵리듀스 작업 실행하기"></a>맵리듀스 작업 실행하기</h3><ul>
+<li>맵 리듀스 = 분산 파일 시스템 위에서 대용량 데이터셋을 처리하는 코드 작성 프로그래밍 프레임워크</li>
+<li>유닉스 도구로의 단순 분석과 유사한 데이터 처리 패턴<ul>
+<li>(1) 입력파일을 레코드로 쪼갠다 (separator = <code>\n</code>)</li>
+<li>(2) 각 레코드마다 매퍼 함수를 호출해 키와 값 추출</li>
+<li>(3) 키 기준으로 키-값 쌍 모두 정렬</li>
+<li>(4) 정렬된 키-값 쌍 전체 댇상으로리듀스 함수 호출 (같은 키값은 서로 인접 -&gt; 쉽게 결합)</li>
+</ul>
+</li>
+<li>맵리듀스 작업 4단계<ul>
+<li>1단계) 입력 형식 파서 : 파일 → 레코드</li>
+<li>2단계) 맵 (Map) : 레코드 → 키, 값 추출</li>
+<li>3단계) 정렬 단계 : 매퍼 출력이 내부적으로 이미 정렬</li>
+<li>4단계) 리듀스 (Reduce) : 키, 값 → 출력 레코드 </li>
+</ul>
+</li>
+<li>2 가지 콜백 함수 구현 필요<ul>
+<li><strong>매퍼 (Mapper)</strong> : 정렬에 적합한 형태로 데이터 준비<ul>
+<li>모든 입력 레코드마다 독립적으로 한 번씩만 호출</li>
+</ul>
+</li>
+<li><strong>리듀서 (Reduccer)</strong> : 정렬된 데이터 가공<ul>
+<li>같은 키를 모으고 해당 값의 집합을 반복해 리듀서 함수 호출</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>맵리듀스 분산 실행<ul>
+<li>병렬 수행 코드를 직접 작성안하고도 동시 처리 가능 (신경x)</li>
+<li>매퍼, 리듀서 : 하둡 (Java Class), MongoDB, CouchDB (Javascript Function)</li>
+<li>파티셔닝 기반<ul>
+<li>매퍼 - 입력 파일 블록수 기반</li>
+<li>리듀서 - 사용자 지정 (키 해시값 사용)</li>
+</ul>
+</li>
+<li>데이터 가까이에서 연산하기 (입력 파일있는 장비에서 맵리듀스 작업 수행) =&gt; 지역성 ↑ 네트워크 부하 ↓</li>
+<li>셔플 (shuffle)<ul>
+<li>리듀서를 기준으로 파티셔닝하고 정렬한 뒤 매퍼로부터 데이터 파티션을 복사하는 과정</li>
+<li>정렬된 순서를 유지하며 병합 (임의 x)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>맵리듀스 워크플로 (workflow)<ul>
+<li>하나의 맵리듀스 출력을 다른 맵리듀스의 입력으로 연결 (파일 경로를 통한 암묵적 방식)</li>
+<li>일괄 처리 작업의 출력은 성공했을 때만 유효 (실패시 남은 출력 제거)</li>
+<li>하둡 도구 예<ul>
+<li>맵리듀스 작업간 수행 의존성을 위한 스케줄러 예 : Oozie, Azkaban, Luigi, <strong>Airflow</strong>, Pinball</li>
+<li>다중 맵리듀스 연결을 위한 하둡용 고수준 도구 예 : Pig, Hive, Cascading, Crunch, FlumeJava</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="리듀스-사이드-조인과-그룹화"><a href="#리듀스-사이드-조인과-그룹화" class="headerlink" title="리듀스 사이드 조인과 그룹화"></a>리듀스 사이드 조인과 그룹화</h3><ul>
+<li>사용자 활동 이벤트 분석 예제<ul>
+<li>활동 이벤트 (activity event) or 클릭스트림 데이터 (clickstream data)</li>
+<li>원격 데이터베이스에 질의한다는 건 일괄 처리가 비결정적이라는 뜻</li>
+<li>데이터베이스의 사본 (ex. ETL) 를 추출해 분산 파일 시스템에 넣는 방법</li>
+</ul>
+</li>
+<li><strong><U>리듀스 사이드 조인 (Reduce-Side Join)</U></strong><ul>
+<li>실제 조인 로직을 리듀서에서 수행</li>
+<li>매퍼는 입력데이터 준비 역할 (입력 데이터에 가정 x)</li>
+</ul>
+</li>
+<li><strong>정렬 병합 조인</strong> (SMB, Sort-Merge Join) <ul>
+<li>매퍼 출력이 키로 정렬된 후 (sort) 리듀서가 조인의 양측에 정렬된 레코드 목록 병합 (merge) </li>
+<li>특정 id의 모든 레코드를 한번에 처리. 한번에 한 id의 레코드만 메모리에 유지. 네트워크 x</li>
+<li>보조 정렬 (secondary sort) : 리듀서가 작업 레코드 재배열</li>
+</ul>
+</li>
+<li>같은 곳으로 연관된 데이터 가져오기<ul>
+<li>같은 키 (주소) 를 가진 키-값 쌍은 모두 같은 리듀서 호출</li>
+<li>맵리듀스는 데이터 모으는 연산 (물리적 네트워크 통신) 과 처리하는 로직 (애플리케이션 로직) 분리</li>
+<li>실패가 발생해도 애플리케이션 코드에서는 고민 no (재시도)</li>
+</ul>
+</li>
+<li>그룹화<ul>
+<li>SQL <code>GROUP BY</code></li>
+<li>맵리듀스로 그룹화 구현 =&gt; 키-값 생성 시 <strong>그룹화할 대상을 키</strong>로 설정</li>
+<li>그룹화 사용 예시) 세션화 (sessionization) </li>
+</ul>
+</li>
+<li>쏠림(skew) 다루기<ul>
+<li>불균형한 활성 데이터베이스 레코드 = 린치핀 객체 (linchpin object) = 핫 키 (hot key)</li>
+<li>한 리듀서에 많은 레코드가 쏠리는 현상 = 핫스팟</li>
+<li>맵 리듀서는 모든 매퍼, 리듀서가 끝나야하므로 지연시간 ↑</li>
+<li>핫스팟 완화 알고리즘<ul>
+<li>Pig의 쏠린 조인(skewed join)</li>
+<li>Crunch의 공유 조인(shared join)</li>
+<li>Hive의 맵 사이드 조인 (map-side-join)</li>
+</ul>
+</li>
+<li>핫 키로 그룹화/집계하는 2 단계<ul>
+<li>(1) 레코드를 임의의 리듀서로 보내 처리해서 핫 키 레코드의 일부를 그룹화 하고 간소화 값 출력</li>
+<li>(2) 첫 단계의 출력으로 나온 값을 키별로 모두 결합해 하나의 값으로</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="맵-사이드-조인"><a href="#맵-사이드-조인" class="headerlink" title="맵 사이드 조인"></a>맵 사이드 조인</h3><ul>
+<li><strong><U>맵 사이드 조인 (Map-Side Join)</U></strong><ul>
+<li>입력 데이터에 대한 특정 가정</li>
+<li>축소된 맵리듀스 (리듀서 x 정렬 x)</li>
+<li>매퍼는 단지 입력 파일 블럭 하나를 읽어 다시 분산 파일 시스템에 출력</li>
+</ul>
+</li>
+<li><strong>브로드캐스트 해시 조인</strong> (Broadcast Hash Join)<ul>
+<li>메모리에 올릴 정도로 작은 데이터 셋과 큰 데이터 셋을 조인</li>
+<li>큰 입력 파티션 하나를 처리하는 각 매퍼는 작은 입력 전체를 읽고 (broadcast), 작은 데이터셋은 각 파티션의 해시 테이블에 적재 (hash)</li>
+<li>인메모리 해시 테이블 적재 대신 로컬 디스크 읽기 전용 색인으로 저장도 가능</li>
+<li>Pig의 복제 조인, Hive의 맵 조인, 캐스케이딩, 크런치, Impala (질의 엔진)</li>
+</ul>
+</li>
+<li><strong>파티션 해시 조인</strong> (Partitioned Hash Join)<ul>
+<li>두 입력 모두를 같은 키, 같은 해시 함수, 같은 수로 파티셔닝하여 조인</li>
+<li>각 맵퍼 해시 테이블에 적재해야 할 데이터의 양 ↓</li>
+<li>Hive의 버킷 맵 조인(bucketed map join)</li>
+</ul>
+</li>
+<li>맵 사이드 병합 조인 (map-side merge join)<ul>
+<li>입력 데이터셋이 같은 파티셔닝, 같은 키 기준 <strong>정렬</strong> 된 경우 사용 가능 (sort-merge)</li>
+</ul>
+</li>
+<li>맵 사이드 조인을 사용하는 맵리듀스 워크플로<ul>
+<li>맵 사이드 조인 vs 리듀스 사이드 조인 =&gt; 출력구조 다름<ul>
+<li>리듀스 사이드 조인 : 조인 키로 파티셔닝, 정렬</li>
+<li>맵 사이드 조인 : 큰 입력과 동일한 방법으로 파티셔닝, 정렬</li>
+</ul>
+</li>
+<li>맵 사이드 조인은 크기, 정렬, 입력 데이터의 파티셔닝 같은 제약 사항 =&gt; 물리적 레이아웃 파악 필수<ul>
+<li>HCatalog, Hive metastore</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="일괄-처리-워크플로의-출력"><a href="#일괄-처리-워크플로의-출력" class="headerlink" title="일괄 처리 워크플로의 출력"></a>일괄 처리 워크플로의 출력</h3><blockquote>
+<p>🤔 애초에 그래서 일괄처리를 왜 쓰는데?</p>
+</blockquote>
+<ul>
+<li>데이터 베이스 질의 구분 =&gt; OLTP를 분석 목적과 구별<ul>
+<li>OLTP 질의 : 색인 사용하여 사용자에게 보여줄 소량의 레코드만 특정키로 조회</li>
+<li>OLAP 분석 질의 : 대량의 레코드를 스캔해 그룹화/집계 연산하여 보고서 형태로 출력</li>
+</ul>
+</li>
+<li><strong>그렇다면 일괄 처리는?</strong><ul>
+<li>트랜잭션 처리도 분석도 X</li>
+<li>분석에 가깝지만 SQL 질의도 아니고 출력은 보고서가 아닌 다른 형태 구조</li>
+</ul>
+</li>
+<li>검색 색인 구축<ul>
+<li>일괄 처리로 색인 구축 효율적 (병렬화, 읽기 전용, 불변)</li>
+<li>색인 갱신 방법 : 전체 색인 워크플로 재수행하여 색인 대치, 증분 색인</li>
+</ul>
+</li>
+<li>일괄 처리의 출력으로 키-값을 저장<ul>
+<li>일괄 처리 워크플로 출력 예 : 검색 색인, 머신러닝 시스템 (분류기), 추천 시스템 ..</li>
+<li><strong>일괄 처리의 출력</strong> =&gt; 일종의 <U>데이터 베이스</U>가 됨</li>
+<li>질의 방법 =&gt; 일괄 처리 작업 내부에 새로운 데이터베이스를 구축해 분산 파일 시스템의 작업 출력 디렉터리에 데이터베이스 파일 저장 (직접 하나씩 데이터베이스에 요청보내는 것은 Bad)</li>
+<li>데이터 파일은 읽기전용, 불변, 서버에 bulk</li>
+</ul>
+</li>
+<li>일괄 처리 출력에 관한 철학<ul>
+<li>인적 내결함성 (human fault tolerance) : 버그 코드로 부터 복원 가능 여부</li>
+<li>비가역성 최소화 (minimizing irreversibility)</li>
+<li>입력 불변, 실패 출력 폐기 =&gt; 실패 시 재실행 반복 가능</li>
+<li>동일 입력 파일 집합 사용</li>
+<li>연결작업과 로직의 분리</li>
+</ul>
+</li>
+<li>유닉스와의 차이점<ul>
+<li>구조화된 파일형식 (avro, parquet) 사용으로 저수준 구문 변환 작업 최소화 가능 + 스키마 발전 가능</li>
+</ul>
+</li>
+</ul>
+<h3 id="하둡과-분산-데이터베이스의-비교"><a href="#하둡과-분산-데이터베이스의-비교" class="headerlink" title="하둡과 분산 데이터베이스의 비교"></a>하둡과 분산 데이터베이스의 비교</h3><ul>
+<li><strong>대규모 병렬 처리 (MPP, Massively Parallel Processing)</strong> 데이터베이스<ul>
+<li>MPP 데이터베이스 : 하나의 쿼리를 여러개의 프로세스로 병렬처리하는 데이터베이스<ul>
+<li><a target="_blank" rel="noopener" href="https://www.comworld.co.kr/news/articleView.html?idxno=49459">‘MPP 데이터베이스란’</a> 참고</li>
+</ul>
+</li>
+<li>맵리듀스의 개념은 이미 수십년전에 MPP DB에서 구현된 것</li>
+<li>MPP vs 맵리듀스<ul>
+<li>💣MPP 데이터베이스 : 장비 클러스에서 분석 SQL 질의를 병렬 수행하는 것에 초점</li>
+<li>🗂맵리듀스 + 분산 파일 시스템 : 아무 프로그램이나 실행할 수 있는 OS 같은 속성 제공</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>저장소의 다양성<ul>
+<li>💣데이터베이스는 특정 모델 (관계형 or 문서형) 에 따라 데이터 구조화 필요</li>
+<li>🗂하둡은 어떤 형태라도 상관없이 HDFS 덤프가능</li>
+<li>현실적으로 하둡처럼 데이터를 <strong>빨리</strong> 사용가능하게, <strong>한 곳에 모으는</strong> 작업만으로도 가치 (like 데이터 웨어하우스)<ul>
+<li>data lake, enterprise data hub</li>
+<li>데이터 해석은 소비자에게 (schema-on-read)</li>
+<li>“원시 데이터가 오히려 좋아” =&gt; 초밥 원리 (sushi principle)</li>
+</ul>
+</li>
+<li>ETL 구현에 사용하기도 (데이터 모델링을 하더라도 수집과는 분리된 단계)</li>
+</ul>
+</li>
+<li>처리 모델의 다양성<ul>
+<li>💣MPP 데이터베이스는 monolithic 구조. 설계된 질의 유형에 좋은 성능 (but 한정)</li>
+<li>🗂맵리듀스 이용 시 자신이 작성한 코드를 대용량 데이터 셋에서 쉽게 실행 가능</li>
+<li>HDFS + 맵리듀스 + SQL 질의 엔진 (Hive) =&gt; 어려운 다양한 일괄 처리 가능</li>
+<li>하둡의 개방성<ul>
+<li>SQL, 맵리듀스보다 더 다양한 모델 등장</li>
+<li>데이터 이동 필요 없이 유연한 지원</li>
+<li>임의 접근 가능한 OLTP 데이터베이스 (Hbase), MPP 스타일의 분석 데이터베이스 (Impala) =&gt; HDFS</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>빈번하게 발생하는 결함을 줄이는 설계<ul>
+<li>MPP 데이터베이스 vs 맵리듀스 2가지 차이<ul>
+<li>결함을 다루는 방식</li>
+<li>메모리 및 디스크 사용 방식</li>
+</ul>
+</li>
+<li>💣MPP 데이터베이스는 한 장비만 죽어도 전체 질의 중단. 가능하면 메모리에 많은 데이터 유지</li>
+<li>🗂맵 리듀스는 개별 태스크 실패에 큰 영향 x. 되도록 디스크에 데이터 기록 (내결함성, 데이터량)</li>
+<li>맵 리듀스는 대용량 작업과 예상치 못한 태스크 종료가 빈번한 경우 적합</li>
+</ul>
+</li>
+</ul>
+<br/>
+
+<h2 id="10-3-맵리듀스를-넘어"><a href="#10-3-맵리듀스를-넘어" class="headerlink" title="10-3 맵리듀스를 넘어"></a>10-3 맵리듀스를 넘어</h2><ul>
+<li>맵리듀스는 분산 시스템에서 가능한 여러 프로그래밍 모델 중 단지 하나<ul>
+<li>데이터 양, 자료 구조, 데이터 처리 방식에 따라 다른 도구가 더 적합할 수도</li>
+<li>맵리듀스를 편하게 쓰기위해 추상화된 다양한 고수준 프로그래밍 모델 (단, 모델 자체 문제 주의)</li>
+</ul>
+</li>
+</ul>
+<h3 id="중간-상태-구체화"><a href="#중간-상태-구체화" class="headerlink" title="중간 상태 구체화"></a>중간 상태 구체화</h3><ul>
+<li>맵리듀스는 다른작업과 모두 독립적 (로직과 연결의 분리)</li>
+<li><strong>중간 상태 (Intermediate state)</strong> 를 파일로 기록하는 과정 =&gt; <strong>구체화 (materialization)</strong><ul>
+<li>장점<ul>
+<li>내구성 (내결함성 확보)</li>
+</ul>
+</li>
+<li>단점<ul>
+<li>모든 선행 작업 태스크가 종료될때까지 대기 (수행시간 slow)</li>
+<li>매퍼 중복</li>
+<li>임시 데이터 (중간 상태) 도 복제되는 과잉 조치</li>
+</ul>
+</li>
+<li>vs 스트리밍 (ex. 유닉스 파이프의 인메모리 버퍼를 사용한 입출력 전달)</li>
+</ul>
+</li>
+<li><strong>데이터플로 엔진 (dataflow engine)</strong><ul>
+<li>분산 일괄 처리 연산 엔진. 전체 워크플로를 독립된 하위작업이 아닌, <U>작업 하나로서 다루는 엔진</U></li>
+<li><strong>Spark</strong>, Tez, Flink</li>
+<li>vs 맵리듀스<ul>
+<li>더 유연한 방법으로 <U>함수</U> 조합 가능 =&gt; <strong>연산자 (operator)</strong></li>
+<li>연산자의 출력과 다른 연산자의 입력을 연결하는 여러가지 선택지 (키로 재파티셔닝 및 정렬, 정렬 스킵, 브로드캐스트 ..)</li>
+<li>수행속도 훨씬 빠름</li>
+</ul>
+</li>
+<li>장점<ul>
+<li>값비싼 작업(ex. 정렬)은 실제 필요할때만 수행</li>
+<li>필요없는 맵 태스크는 없다</li>
+<li>모든 조인과 데이터 의존 관계를 명시적 선언 =&gt; 지역성 최적화</li>
+<li>연산자 간 중간 상태는 로컬 디스크나 메모리에 기록</li>
+<li>입력 준비되는 즉시 실행 가능 (선행 단계 전체 완료 대기 x)</li>
+<li>새로운 연산자 실행 시 이미 존재하는 JVM 사용</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>데이터플로 엔진의 내결함성 (Fault tolerance)<ul>
+<li>중간 상태를 사용하지않는 데이터플로 엔진의 내결함성 확보 접근법 =&gt; 재계산</li>
+<li>Spark (RDD 추상화 - 데이터 조상 추적), Flink (연산자 상태 체크포인트)</li>
+<li>데이터 재연산의 포인트는 “해당 연산이 <strong>결정적인지</strong> 파악” 하는 것 (= 비결정적 원인 제거)</li>
+</ul>
+</li>
+<li>데이터플로 엔진의 구체화<ul>
+<li>데이터플로 엔진은 일부(agg)를 제외하고 파이프라인 방식 실행 가능</li>
+<li>작업 완료시 출력을 지속성 있는 어떤 곳 (=분산 파일 시스템) 에 다시 기록</li>
+<li>모든 중간 상태를 기록하는 수고 x</li>
+</ul>
+</li>
+</ul>
+<h3 id="그래프와-반복-처리"><a href="#그래프와-반복-처리" class="headerlink" title="그래프와 반복 처리"></a>그래프와 반복 처리</h3><ul>
+<li>그래프 처리의 필요성<ul>
+<li>그래프 처리 != 비순환 방향 그래프 (directed acyclic graph, DAG)<ul>
+<li>DAG는 데이터플로 엔진의 작업 연산자. 데이터 흐름이 그래프로 구성</li>
+<li>그래프 처리는 데이터 자체가 그래프 형식</li>
+</ul>
+</li>
+<li>이행적 폐쇄 (transitive closure) : 특정 조건에 도달할때까지 인접 정점 조인<ul>
+<li>맵리듀스로 반복적 스타일로 구현시 비효율적</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>프리글 (Pregel) 처리 모델<ul>
+<li>= 벌크 동기식 병렬 (BSP, bulk synchronous parallel) : 일괄 처리 그래프 최적화 방법</li>
+<li>한 정점이 다른 정점으로 ‘메세지를 보낼’ 수 있다.<ul>
+<li>맵리듀스가 매퍼가 특정 리듀서를 호출해 ‘메세지를 전달’ 과 비슷</li>
+<li>차이점은 반복에서 사용한 메모리 상태 기억</li>
+</ul>
+</li>
+<li>정점 상태 제외하고, 정점 사이 메세지는 내결함성/지속성. 메세지 처리는 고정 횟수 내 처리<ul>
+<li>액터 모델 (분산 액터 프레임워크) 랑 비슷</li>
+<li>차이점은 타이밍 보장 (각 반복에서 이전 반복에서 보내진 모든 메세지 전달)</li>
+</ul>
+</li>
+<li>내결함성<ul>
+<li>반복이 끝나는 시점에 모든 정점 상태를 주기적 저장 (체크포인트)</li>
+<li>프로그래밍 모델 단순화를 위해 프레임워크 차원에서 완벽히 결함 복구</li>
+</ul>
+</li>
+<li>병렬 실행<ul>
+<li>어떤 물리장비에서 정점이 실행되는지 알필요 x. “정점과 같이 생각하기”</li>
+<li>그래프 알고리즘은 장비간 통신 오버헤드 ↑ (최적화 파티셔닝 x)</li>
+<li>그래프가 단일 장비에 넣기 너무 크다면 프리글 같은 분산 접근법 필수</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="고수준-API와-언어"><a href="#고수준-API와-언어" class="headerlink" title="고수준 API와 언어"></a>고수준 API와 언어</h3><ul>
+<li>고수준 API와 언어<ul>
+<li>직접 맵리듀스 작업 작성은 매우 어려움 =&gt; 고수준 API 인기</li>
+<li>이런 데이터플로 API는 일반적으로 관계형 스타일의 빌딩 블록을 사용해 연산 표현</li>
+<li>장점<ul>
+<li>적은 코드 작성</li>
+<li>대화식 사용 지원 (여러 접근법 실험 가능)</li>
+<li>시스템의 생산성 높은 사용 및 장비의 효율적 사용</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>선언형 질의 언어로 전환<ul>
+<li>선언적인 방법으로 조인 지정시 =&gt; (맵리듀스, 데이터플로 계승자들의 내장된) 질의 최적화기가 최적 방법 결정</li>
+<li>장점 <ul>
+<li><strong>코드 임의 실행 및 임의 형식의 데이터 읽기 가능</strong></li>
+<li>칼럼 기반 저장 레이아웃으로 최적화 가능</li>
+<li>Hive, Spark DataFrame, Imapala Vectorized 수행  =&gt; 캐시 히트율 ↑ or 함수 호출 회피</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>다양한 분야를 지원하기 위한 전문화<ul>
+<li>표준화된 처리 패턴 =&gt; 재사용 가능한 공통 빌딩 블록 구현</li>
+<li>재사용 구현의 예 : Mahout, MADlib, 공간 알고리즘 (ex. K-nearest neighbor) </li>
+<li>일괄 처리 엔진은 점차 광범위한 영역에서 필요 알고리즘을 분산 수행하는데 사용</li>
+</ul>
+</li>
+<li>일괄 처리 시스템 vs MPP 데이터베이스<ul>
+<li>점차 비슷해지고 있다 (결국엔 둘다 데이터 저장하고 처리하는 시스템)</li>
+<li>일괄 처리 엔진은 내장 기능 + 고수준 선언적 연산자</li>
+<li>MPP 는 프로그래밍이 가능한 유연성</li>
+</ul>
+</li>
+</ul>
+<br/>
+
+<h2 id="10-정리"><a href="#10-정리" class="headerlink" title="10 정리"></a>10 정리</h2><ul>
+<li>일괄 처리<ul>
+<li>유닉스 도구 및 이의 설계 철학이 어떻게 맵리듀스와 데이터플로 엔진에 녹아있는지</li>
+<li>설계 원리 : 입력은 불변 &amp; 출력은 다른 프로그램의 입력. 복잡한 문제는 ‘한가지 일을 잘하는’ 작은 도구를 엮어서 해결</li>
+</ul>
+</li>
+<li>인터페이스<ul>
+<li>유닉스 환경에서의 프로그램 간 연결하는 단일 인터페이스 =&gt; 파일, 파이프</li>
+<li>맵리듀스의 인터페이스 =&gt; 분산 파일 시스템</li>
+<li>데이터 플로 엔진 =&gt; 자체 데이터 전송 메커니즘 (입출력 HDFS 사용)</li>
+</ul>
+</li>
+<li>분산 일괄 처리 프레임 워크의 해결해야할 2가지 문제<ul>
+<li>파티셔닝<ul>
+<li>매퍼 : 입력 파일 블록에 따라 파티셔닝</li>
+<li>리듀서 : 매퍼의 출력 재파티셔닝 &amp; 정렬 =&gt; 사용자 지정 파티션 개수로 병합</li>
+<li>(데이터 플로 엔진은 필요한 경우가 아니면 정렬 x)</li>
+</ul>
+</li>
+<li>내결함성<ul>
+<li>맵리듀스는 번번히 디스크에 기록</li>
+<li>데이터플로 엔진은 메모리에 상태 유지 (중간 상태를 최대한 구체화 x)</li>
+<li>(결정적 연산자로 재계산 필요 데이터량 절약 가능)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>맵리듀스의 조인 알고리즘 (=&gt; MPP DB, 데이터플로 엔진 내부에서 사용)<ul>
+<li>정렬 병합 조인<ul>
+<li>각 입력이 조인 키를 추출하는 매퍼 통과 =&gt; 파티셔닝, 정렬, 병합 =&gt; 같은 키를 가지는 모든 레코드는 하나의 리듀서에서 호출 (=&gt; 병합된 레코드 출력가능)</li>
+</ul>
+</li>
+<li>브로드캐스트 해시 조인<ul>
+<li>조인할 입력 둘 중 하나가 상대적으로 작은 경우, 파티셔닝하지 않고 해시 테이블에 모두 적재</li>
+</ul>
+</li>
+<li>파티션 해시 조인<ul>
+<li>조인 입력 두개를 같은 방식으로 파티셔닝 (같은 키, 해시함수, 파티션 수) =&gt; 각 파티션 별 독립적 해시 테이블 방식 사용</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>분산 일괄 처리 엔진은 의도적으로 제한된 프로그래밍 모델 제공<ul>
+<li>매퍼/리듀서같은 콜백함수는 상태정보 x, 지정된 출력외 부수 효과 x …</li>
+<li>why? 분산 시스템 내 발생하는 문제들을 추상화 아래로 숨길 수 있음</li>
+<li>문제발생해도 태스크는 안전한 재시도, 실패 태스크의 출력은 폐기 =&gt; 최종 출력이 결함이 생기지 않을 때와 동일 보장</li>
+<li>=&gt; 내결함성 매커니즘 구현 필요 x (신뢰성의 시맨틱)</li>
+</ul>
+</li>
+<li>일괄 처리 작업의 특징<ul>
+<li>입력을 수정하지 않고 읽어 출력 생산</li>
+<li>입력 데이터는 고정된 크기로 한정 (끝 판단 및 작업 종료 가능)</li>
+<li>vs 스트림 처리 [11장] =&gt; 입력이 한정되지 않고 끝이 없음</li>
+</ul>
+</li>
+</ul>
+<br/>
+
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
+<li>MPP 데이터베이스란<ul>
+<li><a target="_blank" rel="noopener" href="https://www.comworld.co.kr/news/articleView.html?idxno=49459">https://www.comworld.co.kr/news/articleView.html?idxno=49459</a></li>
+</ul>
+</li>
+</ul>
+</div><p class="post-tags"><i class="fa fa-tags" aria-hidden="true"></i><a href="/tags/data/">#data</a><a href="/tags/data-intensive-application/">#data_intensive_application</a><a href="/tags/ddia/">#ddia</a><a href="/tags/book/">#book</a><a href="/tags/study/">#study</a></p></article></div><footer><div class="paginator"><a class="next" href="/2021/05/25/Designing-Data-Intensive-Applications-06/">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'minsw-github-io';
+var disqus_identifier = '2021/06/15/Designing-Data-Intensive-Applications-10/';
+var disqus_title = '&amp;#039;데이터 중심 어플리케이션 설계&amp;#039; 10장 - 일괄 처리';
+var disqus_url = 'https://minsw.github.io/2021/06/15/Designing-Data-Intensive-Applications-10/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//#{theme.disqus}.disqus.com/count.js" async></script><div class="copyright"><p>© 2018 - 2021 <a href="https://minsw.github.io">Lukka Min</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-143001954-1",'auto');ga('send','pageview');</script><link rel="stylesheet" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css" media="screen" type="text/css"><script src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script><script>$(function(){$('.datatable').dataTable( {"order": [[ 0, "desc" ]],"iDisplayLength": -1,"lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]} );});</script></body></html>
